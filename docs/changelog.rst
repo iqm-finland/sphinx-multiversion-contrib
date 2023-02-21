@@ -7,6 +7,10 @@ Changelog
 Version 0.2
 ===========
 
+Version 0.2.13 (2023-02-21)
+--------------------------
+* Fix static file path generation when one global copy of static files is used (with flag ``--dev-name``).
+
 Version 0.2.12 (2023-02-08)
 --------------------------
 * Reduce docs size.
