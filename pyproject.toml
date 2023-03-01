@@ -7,10 +7,7 @@ build-backend = "setuptools.build_meta"
 name = "sphinx-multiversion-contrib"
 dynamic = ["version"]
 description = "Add support for multiple versions to sphinx"
-authors = [
-    {name = "Jan Holthuis", email = "holthuis.jan@googlemail.com"},
-    {name = "IQM Finland Oy", email = "developers@meetiqm.com"}
-]
+authors = [{name = "IQM Finland Oy", email = "developers@meetiqm.com"}]
 readme = "README.rst"
 license = {file = "LICENSE.rst"}
 classifiers = [
