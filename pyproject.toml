@@ -53,7 +53,7 @@ cicd = [
 
 
 [project.scripts]
-sphinx-multiversion = "sphinx_multiversion:main:main"
+sphinx-multiversion = "sphinx_multiversion:main"
 
 
 [tool.setuptools_scm]
