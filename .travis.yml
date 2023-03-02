@@ -80,12 +80,11 @@ cache:
   pip: true
 
 install:
-- python -m pip install pre-commit setuptools wheel
+- python -m pip install setuptools wheel
 - python -m pip install -r requirements.txt
 - python setup.py install
 
 before_script:
-- pre-commit run --all-files --show-diff-on-failure
 - python -m unittest --verbose
 
 script:
