@@ -3,7 +3,7 @@ Changelog
 =========
 
 
-Version 0.3.0 (2023 03 01)
+Version 0.3 (2023 03 01)
 --------------------------
 * Project layout refactoring started
 
