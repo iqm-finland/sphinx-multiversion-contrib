@@ -4,27 +4,27 @@ Changelog
 
 
 Version 0.3 (2023 03 01)
---------------------------
+------------------------
 * Project layout refactoring started
 
 
 Version 0.2.13 (2023-02-21)
---------------------------
+---------------------------
 * Fix static file path generation when one global copy of static files is used (with flag ``--dev-name``).
 
 
 Version 0.2.12 (2023-02-08)
---------------------------
+---------------------------
 * Reduce docs size.
 
 
 Version 0.2.11 (2023-02-02)
---------------------------
+---------------------------
 * Reduce docs size.
 
 
 Version 0.2.10 (2023-01-13)
---------------------------
+---------------------------
 * Try extracting the version from the git tag if it exists and sort based on that. Clients can configure an optional ``smv_symver_pattern`` if default patter is not suitable.
 
 
