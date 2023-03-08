@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
+import collections
 import datetime
 import json
-import collections
 import logging
 import os
 import posixpath
 
 from sphinx import config as sphinx_config
-from sphinx.util import i18n as sphinx_i18n
 from sphinx.locale import _
+from sphinx.util import i18n as sphinx_i18n
 
 logger = logging.getLogger(__name__)
 

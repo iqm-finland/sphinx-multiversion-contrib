@@ -1,25 +1,24 @@
 # -*- coding: utf-8 -*-
-import itertools
 import argparse
-import multiprocessing
 import contextlib
+import datetime
+import itertools
 import json
 import logging
+import multiprocessing
 import os
 import pathlib
 import re
+import shutil
 import string
 import subprocess
 import sys
 import tempfile
-import datetime
-import shutil
 
 from sphinx import config as sphinx_config
 from sphinx import project as sphinx_project
 
-from . import sphinx
-from . import git
+from . import git, sphinx
 
 
 @contextlib.contextmanager
