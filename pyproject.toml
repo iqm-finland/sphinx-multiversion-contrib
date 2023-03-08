@@ -37,7 +37,6 @@ test = [
     "mypy == 0.991",
     "pytest == 7.1.2",
     "pytest-cov == 3.0.0",
-    "pytest-isort == 3.0.0",
     "pytest-mypy == 0.9.1",
     "pytest-pylint == 0.18.0",
     "mockito == 1.2.2",  # TODO: Chek if this dependency is needed

@@ -89,7 +89,6 @@ isort==5.12.0
     # via
     #   -r requirements/constraints.txt
     #   pylint
-    #   pytest-isort
     #   sphinx-multiversion-contrib (pyproject.toml)
 jinja2==3.1.2
     # via
@@ -160,15 +159,10 @@ pytest==7.1.2
     # via
     #   -r requirements/constraints.txt
     #   pytest-cov
-    #   pytest-isort
     #   pytest-mypy
     #   pytest-pylint
     #   sphinx-multiversion-contrib (pyproject.toml)
 pytest-cov==3.0.0
-    # via
-    #   -r requirements/constraints.txt
-    #   sphinx-multiversion-contrib (pyproject.toml)
-pytest-isort==3.0.0
     # via
     #   -r requirements/constraints.txt
     #   sphinx-multiversion-contrib (pyproject.toml)
