@@ -23,7 +23,7 @@ repository:
 
 .. code-block:: bash
 
-    pip install git+https://github.com/Holzhaus/sphinx-multiversion.git
+    pip install git+https://github.com/iqm-finland/sphinx-multiversion-contrib.git
 
 Install via :file:`setup.py`
 ============================
@@ -32,7 +32,7 @@ It's also possible to clone the Git repository and install the extension using i
 
 .. code-block:: bash
 
-    git clone https://github.com/Holzhaus/sphinx-multiversion.git
+    git clone https://github.com/iqm-finland/sphinx-multiversion-contrib.git
     cd sphinx-multiversion
     python setup.py install
 

@@ -8,6 +8,6 @@ Contributors
 * Paul Lysak <paul.lysak@gmail.com>
 * Philip Durbin <philipdurbin@gmail.com>
 * Rakhim Davletkaliyev <rakhim.davletkaliyev@meetiqm.com>
-* Ricardas <ricardas.brazinskas@meetiqm.com>
+* Ricardas Brazinskas<ricardas.brazinskas@meetiqm.com>
 * Tully Foote <tfoote@osrfoundation.org>
 * Vladimir Kukushkin <kukushechkin@mac.com>
