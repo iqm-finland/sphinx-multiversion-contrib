@@ -50,14 +50,10 @@ def get_all_refs(gitroot):
 
         commit = fields[0]
         refname = fields[1]
-        creatordate = datetime.datetime.strptime(
-            fields[2], "%Y-%m-%d %H:%M:%S %z"
-        )
+        creatordate = datetime.datetime.strptime(fields[2], "%Y-%m-%d %H:%M:%S %z")
 
         # Parse refname
-        matchobj = re.match(
-            r"^refs/(heads|tags|remotes/[^/]+)/(\S+)$", refname
-        )
+        matchobj = re.match(r"^refs/(heads|tags|remotes/[^/]+)/(\S+)$", refname)
         if not matchobj:
             continue
         source = matchobj.group(1)
@@ -69,26 +65,20 @@ def get_all_refs(gitroot):
         yield GitRef(name, commit, source, is_remote, refname, creatordate)
 
 
-def get_refs(
-    gitroot, tag_whitelist, branch_whitelist, remote_whitelist, files=()
-):
+def get_refs(gitroot, tag_whitelist, branch_whitelist, remote_whitelist, files=()):
     for ref in get_all_refs(gitroot):
         if ref.source == "tags":
             if tag_whitelist is None or not re.match(tag_whitelist, ref.name):
                 logger.debug(
-                    "Skipping '%s' because tag '%s' doesn't match the "
-                    "whitelist pattern",
+                    "Skipping '%s' because tag '%s' doesn't match the " "whitelist pattern",
                     ref.refname,
                     ref.name,
                 )
                 continue
         elif ref.source == "heads":
-            if branch_whitelist is None or not re.match(
-                branch_whitelist, ref.name
-            ):
+            if branch_whitelist is None or not re.match(branch_whitelist, ref.name):
                 logger.debug(
-                    "Skipping '%s' because branch '%s' doesn't match the "
-                    "whitelist pattern",
+                    "Skipping '%s' because branch '%s' doesn't match the " "whitelist pattern",
                     ref.refname,
                     ref.name,
                 )
@@ -97,33 +87,24 @@ def get_refs(
             remote_name = ref.source.partition("/")[2]
             if not re.match(remote_whitelist, remote_name):
                 logger.debug(
-                    "Skipping '%s' because remote '%s' doesn't match the "
-                    "whitelist pattern",
+                    "Skipping '%s' because remote '%s' doesn't match the " "whitelist pattern",
                     ref.refname,
                     remote_name,
                 )
                 continue
-            if branch_whitelist is None or not re.match(
-                branch_whitelist, ref.name
-            ):
+            if branch_whitelist is None or not re.match(branch_whitelist, ref.name):
                 logger.debug(
-                    "Skipping '%s' because branch '%s' doesn't match the "
-                    "whitelist pattern",
+                    "Skipping '%s' because branch '%s' doesn't match the " "whitelist pattern",
                     ref.refname,
                     ref.name,
                 )
                 continue
         else:
-            logger.debug(
-                "Skipping '%s' because its not a branch or tag", ref.refname
-            )
+            logger.debug("Skipping '%s' because its not a branch or tag", ref.refname)
             continue
 
         missing_files = [
-            filename
-            for filename in files
-            if filename != "."
-            and not file_exists(gitroot, ref.refname, filename)
+            filename for filename in files if filename != "." and not file_exists(gitroot, ref.refname, filename)
         ]
         if missing_files:
             logger.debug(
@@ -147,9 +128,7 @@ def file_exists(gitroot, refname, filename):
         "-e",
         "{}:{}".format(refname, filename),
     )
-    proc = subprocess.run(
-        cmd, cwd=gitroot, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-    )
+    proc = subprocess.run(cmd, cwd=gitroot, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     return proc.returncode == 0
 
 

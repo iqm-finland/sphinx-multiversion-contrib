@@ -48,12 +48,8 @@ class VersionInfoTestCase(unittest.TestCase):
                     "source": "heads",
                     "creatordate": "2020-08-06 11:53:06 -0400",
                     "basedir": os.path.join(root, "branch-with/slash"),
-                    "sourcedir": os.path.join(
-                        root, "branch-with/slash", "docs"
-                    ),
-                    "outputdir": os.path.join(
-                        root, "build", "html", "branch-with/slash"
-                    ),
+                    "sourcedir": os.path.join(root, "branch-with/slash", "docs"),
+                    "outputdir": os.path.join(root, "build", "html", "branch-with/slash"),
                     "confdir": os.path.join(root, "branch-with/slash", "docs"),
                     "docnames": ["testpage"],
                 },

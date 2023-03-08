@@ -40,9 +40,7 @@ def load_sphinx_config_worker(q, confpath, confoverrides, add_defaults):
             )
 
         if add_defaults:
-            current_config.add(
-                "smv_tag_whitelist", sphinx.DEFAULT_TAG_WHITELIST, "html", str
-            )
+            current_config.add("smv_tag_whitelist", sphinx.DEFAULT_TAG_WHITELIST, "html", str)
             current_config.add(
                 "smv_branch_whitelist",
                 sphinx.DEFAULT_TAG_WHITELIST,
@@ -151,10 +149,7 @@ def main(argv=None):
         "-c",
         metavar="PATH",
         dest="confdir",
-        help=(
-            "path where configuration file (conf.py) is located "
-            "(default: same as SOURCEDIR)"
-        ),
+        help=("path where configuration file (conf.py) is located " "(default: same as SOURCEDIR)"),
     )
     parser.add_argument(
         "-C",
@@ -184,18 +179,13 @@ def main(argv=None):
         "--dev-name",
         metavar="DEV_NAME",
         dest="dev_name",
-        help=(
-            "name for the development version of docs to be built"
-        ),
+        help=("name for the development version of docs to be built"),
     )
     parser.add_argument(
         "--dev-path",
         metavar="DEV_PATH",
         dest="dev_path",
-        help=(
-            "path where to store the development version of docs "
-            "(default: root build directory)"
-        ),
+        help=("path where to store the development version of docs " "(default: root build directory)"),
     )
     args, argv = parser.parse_known_args(argv)
     if args.noconfig:
@@ -204,11 +194,7 @@ def main(argv=None):
     logger = logging.getLogger(__name__)
 
     sourcedir_absolute = os.path.abspath(args.sourcedir)
-    confdir_absolute = (
-        os.path.abspath(args.confdir)
-        if args.confdir is not None
-        else sourcedir_absolute
-    )
+    confdir_absolute = os.path.abspath(args.confdir) if args.confdir is not None else sourcedir_absolute
 
     # Conf-overrides
     confoverrides = {}
@@ -217,22 +203,16 @@ def main(argv=None):
         confoverrides[key] = value
 
     # Parse config
-    config = load_sphinx_config(
-        confdir_absolute, confoverrides, add_defaults=True
-    )
+    config = load_sphinx_config(confdir_absolute, confoverrides, add_defaults=True)
 
     # Get relative paths to root of git repository
-    gitroot = pathlib.Path(
-        git.get_toplevel_path(cwd=sourcedir_absolute)
-    ).resolve()
+    gitroot = pathlib.Path(git.get_toplevel_path(cwd=sourcedir_absolute)).resolve()
     cwd_absolute = os.path.abspath(".")
     cwd_relative = os.path.relpath(cwd_absolute, str(gitroot))
 
     logger.debug("Git toplevel path: %s", str(gitroot))
     sourcedir = os.path.relpath(sourcedir_absolute, str(gitroot))
-    logger.debug(
-        "Source dir (relative to git toplevel path): %s", str(sourcedir)
-    )
+    logger.debug("Source dir (relative to git toplevel path): %s", str(sourcedir))
     if args.confdir:
         confdir = os.path.relpath(confdir_absolute, str(gitroot))
     else:
@@ -261,10 +241,7 @@ def main(argv=None):
     logger = logging.getLogger(__name__)
     released_versions = []
 
-    with (
-        tempfile.TemporaryDirectory() as tmp,
-        tempfile.TemporaryDirectory() as doctree_cache
-    ):
+    with (tempfile.TemporaryDirectory() as tmp, tempfile.TemporaryDirectory() as doctree_cache):
         # Generate Metadata
         metadata = {}
         outputdirs = set()
@@ -313,31 +290,25 @@ def main(argv=None):
                 source_suffixes = [current_config.source_suffix]
 
             current_sourcedir = os.path.join(repopath, sourcedir)
-            project = sphinx_project.Project(
-                current_sourcedir, source_suffixes
-            )
+            project = sphinx_project.Project(current_sourcedir, source_suffixes)
             metadata[gitref.name] = {
                 "name": gitref.name,
                 "version": current_config.version,
                 "release": gitref.name,
                 "rst_prolog": current_config.rst_prolog,
-                "is_released": bool(
-                    re.match(config.smv_released_pattern, gitref.refname)
-                ),
+                "is_released": bool(re.match(config.smv_released_pattern, gitref.refname)),
                 "source": gitref.source,
                 "creatordate": gitref.creatordate.strftime(sphinx.DATE_FMT),
                 "basedir": repopath,
                 "sourcedir": current_sourcedir,
-                "outputdir": os.path.join(
-                    os.path.abspath(args.outputdir), outputdir
-                ),
+                "outputdir": os.path.join(os.path.abspath(args.outputdir), outputdir),
                 "confdir": confpath,
                 "docnames": list(project.discover()),
             }
 
             if metadata[gitref.name]['is_released']:
                 released_versions.append(gitref.name)
-        
+
         if args.dev_name:
             metadata[args.dev_name] = {
                 "name": args.dev_name,
@@ -349,9 +320,7 @@ def main(argv=None):
                 "creatordate": datetime.datetime.now(datetime.timezone.utc).strftime(sphinx.DATE_FMT),
                 "basedir": repopath,
                 "sourcedir": confdir_absolute,
-                "outputdir": os.path.join(
-                    os.path.abspath(args.outputdir), args.dev_path or ""
-                ),
+                "outputdir": os.path.join(os.path.abspath(args.outputdir), args.dev_path or ""),
                 "confdir": confpath,
                 "docnames": list(project.discover()),
             }
@@ -391,12 +360,7 @@ def main(argv=None):
 
             os.makedirs(data["outputdir"], exist_ok=True)
 
-            defines = itertools.chain(
-                *(
-                    ("-D", string.Template(d).safe_substitute(data))
-                    for d in args.define
-                )
-            )
+            defines = itertools.chain(*(("-D", string.Template(d).safe_substitute(data)) for d in args.define))
 
             current_argv = argv.copy()
             current_argv.extend(
