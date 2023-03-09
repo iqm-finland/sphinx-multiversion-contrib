@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+"""Helper functions for working with Git repositories"""
+
 import collections
 import datetime
 import logging
@@ -24,6 +26,7 @@ logger = logging.getLogger(__name__)
 
 
 def get_toplevel_path(cwd=None):
+    """Execute Git command to get top level path"""
     cmd = (
         "git",
         "rev-parse",
@@ -34,6 +37,7 @@ def get_toplevel_path(cwd=None):
 
 
 def get_all_refs(gitroot):
+    """Execute Git command to get all references"""
     cmd = (
         "git",
         "for-each-ref",
@@ -66,11 +70,12 @@ def get_all_refs(gitroot):
 
 
 def get_refs(gitroot, tag_whitelist, branch_whitelist, remote_whitelist, files=()):
+    """Filter Git references"""
     for ref in get_all_refs(gitroot):
         if ref.source == "tags":
             if tag_whitelist is None or not re.match(tag_whitelist, ref.name):
                 logger.debug(
-                    "Skipping '%s' because tag '%s' doesn't match the " "whitelist pattern",
+                    "Skipping '%s' because tag '%s' doesn't match the whitelist pattern",
                     ref.refname,
                     ref.name,
                 )
@@ -78,7 +83,7 @@ def get_refs(gitroot, tag_whitelist, branch_whitelist, remote_whitelist, files=(
         elif ref.source == "heads":
             if branch_whitelist is None or not re.match(branch_whitelist, ref.name):
                 logger.debug(
-                    "Skipping '%s' because branch '%s' doesn't match the " "whitelist pattern",
+                    "Skipping '%s' because branch '%s' doesn't match the whitelist pattern",
                     ref.refname,
                     ref.name,
                 )
@@ -87,14 +92,14 @@ def get_refs(gitroot, tag_whitelist, branch_whitelist, remote_whitelist, files=(
             remote_name = ref.source.partition("/")[2]
             if not re.match(remote_whitelist, remote_name):
                 logger.debug(
-                    "Skipping '%s' because remote '%s' doesn't match the " "whitelist pattern",
+                    "Skipping '%s' because remote '%s' doesn't match the whitelist pattern",
                     ref.refname,
                     remote_name,
                 )
                 continue
             if branch_whitelist is None or not re.match(branch_whitelist, ref.name):
                 logger.debug(
-                    "Skipping '%s' because branch '%s' doesn't match the " "whitelist pattern",
+                    "Skipping '%s' because branch '%s' doesn't match the whitelist pattern",
                     ref.refname,
                     ref.name,
                 )
@@ -118,6 +123,7 @@ def get_refs(gitroot, tag_whitelist, branch_whitelist, remote_whitelist, files=(
 
 
 def file_exists(gitroot, refname, filename):
+    """Execute Git command to check if file exists"""
     if os.sep != "/":
         # Git requires / path sep, make sure we use that
         filename = filename.replace(os.sep, "/")
@@ -126,13 +132,15 @@ def file_exists(gitroot, refname, filename):
         "git",
         "cat-file",
         "-e",
-        "{}:{}".format(refname, filename),
+        f"{refname}:{filename}",
     )
-    proc = subprocess.run(cmd, cwd=gitroot, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    proc = subprocess.run(cmd, cwd=gitroot, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
     return proc.returncode == 0
 
 
-def copy_tree(gitroot, src, dst, reference, sourcepath="."):
+# def copy_tree(gitroot, src, dst, reference, sourcepath="."):
+def copy_tree(gitroot, dst, reference, sourcepath="."):
+    """Execute Git command to copy repository tree"""
     with tempfile.SpooledTemporaryFile() as fp:
         cmd = (
             "git",

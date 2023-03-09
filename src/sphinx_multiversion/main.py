@@ -286,7 +286,7 @@ def main(argv=None):  # pylint: disable=too-many-branches,too-many-locals,too-ma
             # Clone Git repo
             repopath = os.path.join(tmp, gitref.commit)
             try:
-                git.copy_tree(str(gitroot), gitroot.as_uri(), repopath, gitref)
+                git.copy_tree(str(gitroot), repopath, gitref)
             except (OSError, subprocess.CalledProcessError):
                 logger.error(
                     "Failed to copy git tree for %s to %s",
