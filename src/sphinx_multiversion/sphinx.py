@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+"""Helper functions for working with sphinx"""
+
 import collections
 import datetime
 import json
@@ -32,6 +34,8 @@ Version = collections.namedtuple(
 
 
 class VersionInfo:
+    """Represents information of the available versions of documentation"""
+
     def __init__(self, app, context, metadata, current_version_name):
         self.app = app
         self.context = context
@@ -49,18 +53,22 @@ class VersionInfo:
 
     @property
     def tags(self):
+        """Documentation version information by tag"""
         return [self._dict_to_versionobj(v) for v in self.metadata.values() if v["source"] == "tags"]
 
     @property
     def branches(self):
+        """Documentation version information by branch"""
         return [self._dict_to_versionobj(v) for v in self.metadata.values() if v["source"] != "tags"]
 
     @property
     def releases(self):
+        """Documentation version information of the released versions"""
         return [self._dict_to_versionobj(v) for v in self.metadata.values() if v["is_released"]]
 
     @property
     def in_development(self):
+        """Documentation version information of the versions under development"""
         return [self._dict_to_versionobj(v) for v in self.metadata.values() if not v["is_released"]]
 
     def __iter__(self):
@@ -73,8 +81,10 @@ class VersionInfo:
         v = self.metadata.get(name)
         if v:
             return self._dict_to_versionobj(v)
+        return None
 
     def vhasdoc(self, other_version_name):
+        """Return True if the current document exists in another version"""
         if self.current_version_name == other_version_name:
             return True
 
@@ -82,8 +92,11 @@ class VersionInfo:
         return self.context["pagename"] in other_version["docnames"]
 
     def vpathto(self, other_version_name):
+        """Get the relative URL to the current page in the other version of
+        documentation. If the current page does not exist in that version, the
+        relative URL to its root document is returned instead"""
         if self.current_version_name == other_version_name:
-            return "{}.html".format(posixpath.split(self.context["pagename"])[-1])
+            return f"{posixpath.split(self.context['pagename'])[-1]}.html"
 
         # Find relative outputdir paths from common output root
         current_version = self.metadata[self.current_version_name]
@@ -108,10 +121,11 @@ class VersionInfo:
         if not self.vhasdoc(other_version_name):
             return posixpath.join(other_outputdir, "index.html")
 
-        return posixpath.join(other_outputdir, "{}.html".format(self.context["pagename"]))
+        return posixpath.join(other_outputdir, f"{self.context['pagename']}.html")
 
 
-def html_page_context(app, pagename, templatename, context, doctree):
+def html_page_context(app, pagename, templatename, context, doctree):  # pylint: disable=unused-argument
+    """Set HTML page context"""
     versioninfo = VersionInfo(app, context, app.config.smv_metadata, app.config.smv_current_version)
     context["versions"] = versioninfo
     context["vhasdoc"] = versioninfo.vhasdoc
@@ -131,7 +145,7 @@ def config_inited(app, config):
         if not config.smv_metadata_path:
             return
 
-        with open(config.smv_metadata_path, mode="r") as f:
+        with open(config.smv_metadata_path, mode="r", encoding="utf-8") as f:
             metadata = json.load(f)
 
         config.smv_metadata = metadata
@@ -163,6 +177,7 @@ def config_inited(app, config):
 
 
 def setup(app):
+    """Setup sphinx"""
     app.add_config_value("smv_metadata", {}, "html")
     app.add_config_value("smv_metadata_path", "", "html")
     app.add_config_value("smv_current_version", "", "html")
