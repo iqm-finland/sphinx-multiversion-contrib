@@ -1,3 +1,5 @@
+"""Unit tests for sphinx-multiversion-contrib"""
+
 import os.path
 import posixpath
 import tempfile
@@ -7,6 +9,8 @@ import sphinx_multiversion
 
 
 class VersionInfoTestCase(unittest.TestCase):
+    """Unit tests"""
+
     def setUp(self):
         root = tempfile.gettempdir()
 
@@ -58,10 +62,12 @@ class VersionInfoTestCase(unittest.TestCase):
         )
 
     def test_tags_property(self):
+        """Test tags property"""
         versions = self.versioninfo.tags
         self.assertEqual([version.name for version in versions], ["v0.1.0"])
 
     def test_branches_property(self):
+        """Test branches property"""
         versions = self.versioninfo.branches
         self.assertEqual(
             [version.name for version in versions],
@@ -69,10 +75,12 @@ class VersionInfoTestCase(unittest.TestCase):
         )
 
     def test_releases_property(self):
+        """Test releases property"""
         versions = self.versioninfo.releases
         self.assertEqual([version.name for version in versions], ["v0.1.0"])
 
     def test_in_development_property(self):
+        """Test in_development property"""
         versions = self.versioninfo.in_development
         self.assertEqual(
             [version.name for version in versions],
@@ -80,6 +88,7 @@ class VersionInfoTestCase(unittest.TestCase):
         )
 
     def test_vhasdoc(self):
+        """Test if current document is available in another version"""
         self.assertTrue(self.versioninfo.vhasdoc("master"))
         self.assertFalse(self.versioninfo.vhasdoc("v0.1.0"))
         self.assertTrue(self.versioninfo.vhasdoc("branch-with/slash"))
@@ -90,6 +99,7 @@ class VersionInfoTestCase(unittest.TestCase):
         self.assertFalse(self.versioninfo.vhasdoc("branch-with/slash"))
 
     def test_vpathto(self):
+        """Test getting path to a document in another version"""
         self.assertEqual(self.versioninfo.vpathto("master"), "testpage.html")
         self.assertEqual(
             self.versioninfo.vpathto("v0.1.0"),
