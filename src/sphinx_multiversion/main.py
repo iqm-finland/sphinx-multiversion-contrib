@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+"""Command line interface for building multiversion sphinx documentation"""
+
 import argparse
 import contextlib
 import datetime
@@ -22,7 +24,8 @@ from . import git, sphinx
 
 
 @contextlib.contextmanager
-def working_dir(path):
+def _set_working_dir(path):
+    "Change current working directory temporary, e.g. within a context manager"
     prev_cwd = os.getcwd()
     os.chdir(path)
     try:
@@ -31,9 +34,10 @@ def working_dir(path):
         os.chdir(prev_cwd)
 
 
-def load_sphinx_config_worker(q, confpath, confoverrides, add_defaults):
+def _create_sphinx_config_worker(q, confpath, confoverrides, add_defaults):
+    """Create a worker to load sphinx configuration"""
     try:
-        with working_dir(confpath):
+        with _set_working_dir(confpath):
             current_config = sphinx_config.Config.read(
                 confpath,
                 confoverrides,
@@ -69,17 +73,18 @@ def load_sphinx_config_worker(q, confpath, confoverrides, add_defaults):
             current_config.add("smv_symver_pattern", r"^[^\d]*(\d*\.\d*).*$", "html", str)
         current_config.pre_init_values()
         current_config.init_values()
-    except Exception as err:
-        q.put(err)
+    except Exception as e:  # pylint: disable=broad-except
+        q.put(e)
         return
 
     q.put(current_config)
 
 
-def load_sphinx_config(confpath, confoverrides, add_defaults=False):
+def _load_sphinx_config(confpath, confoverrides, add_defaults=False):
+    """Load sphinx config"""
     q = multiprocessing.Queue()
     proc = multiprocessing.Process(
-        target=load_sphinx_config_worker,
+        target=_create_sphinx_config_worker,
         args=(q, confpath, confoverrides, add_defaults),
     )
     proc.start()
@@ -90,7 +95,8 @@ def load_sphinx_config(confpath, confoverrides, add_defaults=False):
     return result
 
 
-def get_python_flags():
+def _get_python_flags():  # pylint: disable=too-many-branches
+    """Get Python runtime flags that were provided through command line arguments or environment vars"""
     if sys.flags.bytes_warning:
         yield "-b"
     if sys.flags.debug:
@@ -113,14 +119,16 @@ def get_python_flags():
         yield "-q"
     if sys.flags.verbose:
         yield "-v"
+
     for option, value in sys._xoptions.items():
         if value is True:
             yield from ("-X", option)
         else:
-            yield from ("-X", "{}={}".format(option, value))
+            yield from ("-X", f"{option}={value}")
 
 
-def generate_html_redirection_page(path=''):
+def _generate_html_redirection_page(path=""):
+    """Generate markup for HTML page which redirects to the latest released docs"""
     return fr'''<!-- This page is created automatically by documentation builder -->
 <!DOCTYPE html>
 <html>
@@ -133,10 +141,8 @@ def generate_html_redirection_page(path=''):
 </html>'''
 
 
-def main(argv=None):
-    if not argv:
-        argv = sys.argv[1:]
-
+def _create_argument_parser():
+    """Create parser with custom arguments"""
     parser = argparse.ArgumentParser()
     parser.add_argument("sourcedir", help="path to documentation source files")
     parser.add_argument("outputdir", help="path to output directory")
@@ -187,6 +193,37 @@ def main(argv=None):
         dest="dev_path",
         help=("path where to store the development version of docs " "(default: root build directory)"),
     )
+
+    return parser
+
+
+def _update_static_path(output_dir):
+    """Change (in-place) path of _static folder in all HTML and CSS files of
+    older versions of documentation to the _static folder of dev version, then
+    remove the local _static folder. This allows to use a single copy of static
+    files across all versions of documentation"""
+
+    for root, _, files in os.walk(output_dir):
+        for file in files:
+            if file.endswith(".html") or file.endswith(".css"):
+                file_path = os.path.join(root, file)
+                with open(file_path, mode="r", encoding="utf-8") as f:
+                    filedata = f.read()
+                # Use relative path to the _static folder of dev version
+                filedata = filedata.replace("_static", "../../_static")
+                with open(file_path, mode="w", encoding="utf-8") as f:
+                    f.write(filedata)
+
+    # Remove the _static folder
+    shutil.rmtree(os.path.join(output_dir, "_static"))
+
+
+def main(argv=None):  # pylint: disable=too-many-branches,too-many-locals,too-many-statements
+    """Command line interface for building multiversion sphinx documentation"""
+    if not argv:
+        argv = sys.argv[1:]
+
+    parser = _create_argument_parser()
     args, argv = parser.parse_known_args(argv)
     if args.noconfig:
         return 1
@@ -203,7 +240,7 @@ def main(argv=None):
         confoverrides[key] = value
 
     # Parse config
-    config = load_sphinx_config(confdir_absolute, confoverrides, add_defaults=True)
+    config = _load_sphinx_config(confdir_absolute, confoverrides, add_defaults=True)
 
     # Get relative paths to root of git repository
     gitroot = pathlib.Path(git.get_toplevel_path(cwd=sourcedir_absolute)).resolve()
@@ -261,7 +298,7 @@ def main(argv=None):
             # Find config
             confpath = os.path.join(repopath, confdir)
             try:
-                current_config = load_sphinx_config(confpath, confoverrides)
+                current_config = _load_sphinx_config(confpath, confoverrides)
             except (OSError, sphinx_config.ConfigError):
                 logger.error(
                     "Failed load config for %s from %s",
@@ -306,7 +343,7 @@ def main(argv=None):
                 "docnames": list(project.discover()),
             }
 
-            if metadata[gitref.name]['is_released']:
+            if metadata[gitref.name]["is_released"]:
                 released_versions.append(gitref.name)
 
         if args.dev_name:
@@ -335,26 +372,26 @@ def main(argv=None):
 
         # Generate HTML page which redirects to latest released docs
         html_file_path = os.path.abspath(os.path.join(sourcedir, "_static/index.html"))
-        with open(html_file_path, mode="w") as fp:
+        with open(html_file_path, mode="w", encoding="utf-8") as fp:
             redirection_path = released_versions[-1] + "/index.html"
-            fp.write(generate_html_redirection_page(redirection_path))
+            fp.write(_generate_html_redirection_page(redirection_path))
 
         # Write Metadata
         metadata_path = os.path.abspath(os.path.join(tmp, "versions.json"))
-        with open(metadata_path, mode="w") as fp:
+        with open(metadata_path, mode="w", encoding="utf-8") as fp:
             json.dump(metadata, fp, indent=2)
 
         # Run Sphinx
-        argv.extend(["-D", "smv_metadata_path={}".format(metadata_path)])
+        argv.extend(["-D", f"smv_metadata_path={metadata_path}"])
         for version_name, data in metadata.items():
             # When --skip-if-outputdir-exists flag passed, do not build version if its output
             # directory already exists. This does not check the contents of directory.
             if args.skip_if_outputdir_exists:
-                if os.path.isdir(data['outputdir']) and data['name'] != args.dev_name:
+                if os.path.isdir(data["outputdir"]) and data["name"] != args.dev_name:
                     logger.warning(
                         "Skipping version because outputdir '%s' for %s already exists",
-                        data['outputdir'],
-                        data['name'],
+                        data["outputdir"],
+                        data["name"],
                     )
                     continue
 
@@ -367,9 +404,9 @@ def main(argv=None):
                 [
                     *defines,
                     "-D",
-                    "smv_latest_version={}".format(released_versions[-1]),
+                    f"smv_latest_version={released_versions[-1]}",
                     "-D",
-                    "smv_current_version={}".format(version_name),
+                    f"smv_current_version={version_name}",
                     "-c",
                     confdir_absolute,
                     data["sourcedir"],
@@ -380,7 +417,7 @@ def main(argv=None):
             logger.debug("Running sphinx-build with args: %r", current_argv)
             cmd = (
                 sys.executable,
-                *get_python_flags(),
+                *_get_python_flags(),
                 "-m",
                 "sphinx",
                 "-d",
@@ -401,20 +438,8 @@ def main(argv=None):
             )
             subprocess.check_call(cmd, cwd=current_cwd, env=env)
 
-            # change path for _static folder in all version html and css files to the _static folder of dev version
-            if args.dev_name:
-                if version_name != args.dev_name:
-                    for root, dirs, files in os.walk(data['outputdir']):
-                        for file in files:
-                            if file.endswith('.html') or file.endswith('.css'):
-                                file_path = os.path.join(root, file)
-                                with open(file_path, 'r') as f:
-                                    filedata = f.read()
-                                # use relative path to the dev version _static folder
-                                filedata = filedata.replace("_static", "../../_static")
-                                with open(file_path, 'w') as f:
-                                    f.write(filedata)
-                    # and now remove the _static folder
-                    shutil.rmtree(os.path.join(data['outputdir'], '_static'))
+            # Use "master" copy of static files for all documentation releases
+            if args.dev_name and (version_name != args.dev_name):
+                _update_static_path(data["outputdir"])
 
     return 0
