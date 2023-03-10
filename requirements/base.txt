@@ -20,7 +20,6 @@ attrs==22.2.0
     # via
     #   -r requirements/constraints.txt
     #   pytest
-    #   pytest-mypy
 babel==2.12.1
     # via
     #   -r requirements/constraints.txt
@@ -63,10 +62,6 @@ docutils==0.17.1
     #   -r requirements/constraints.txt
     #   pydata-sphinx-theme
     #   sphinx
-filelock==3.9.0
-    # via
-    #   -r requirements/constraints.txt
-    #   pytest-mypy
 idna==3.4
     # via
     #   -r requirements/constraints.txt
@@ -106,9 +101,7 @@ mccabe==0.7.0
 mockito==1.2.2
     # via -r requirements/constraints.txt
 mypy==0.991
-    # via
-    #   -r requirements/constraints.txt
-    #   pytest-mypy
+    # via -r requirements/constraints.txt
 mypy-extensions==1.0.0
     # via
     #   -r requirements/constraints.txt
@@ -151,10 +144,7 @@ pytest==7.1.2
     # via
     #   -r requirements/constraints.txt
     #   pytest-cov
-    #   pytest-mypy
 pytest-cov==3.0.0
-    # via -r requirements/constraints.txt
-pytest-mypy==0.9.1
     # via -r requirements/constraints.txt
 pyyaml==6.0
     # via
