@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Helper functions for working with Git repositories"""
 
-import collections
 import datetime
 import logging
 import os
@@ -10,8 +9,11 @@ import subprocess
 import tarfile
 import tempfile
 
-GitRef = collections.namedtuple(
-    "VersionRef",
+from collections import namedtuple
+
+
+GitVersionRef = namedtuple(
+    "GitVersionRef",
     [
         "name",
         "commit",
@@ -66,7 +68,7 @@ def get_all_refs(gitroot):
         if source.startswith("remotes/"):
             is_remote = True
 
-        yield GitRef(name, commit, source, is_remote, refname, creatordate)
+        yield GitVersionRef(name, commit, source, is_remote, refname, creatordate)
 
 
 def get_refs(gitroot, tag_whitelist, branch_whitelist, remote_whitelist, files=()):
