@@ -58,8 +58,6 @@ markupsafe==2.1.2
     # via jinja2
 mccabe==0.7.0
     # via pylint
-mockito==1.2.2
-    # via sphinx-multiversion-contrib (pyproject.toml)
 mypy==0.991
     # via sphinx-multiversion-contrib (pyproject.toml)
 mypy-extensions==1.0.0
@@ -129,10 +127,6 @@ tomli==2.0.1
     #   pytest
 tomlkit==0.11.6
     # via pylint
-types-requests==2.28.9
-    # via sphinx-multiversion-contrib (pyproject.toml)
-types-urllib3==1.26.25.8
-    # via types-requests
 typing-extensions==4.5.0
     # via
     #   astroid
