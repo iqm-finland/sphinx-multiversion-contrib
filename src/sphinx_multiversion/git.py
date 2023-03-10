@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Helper functions for working with Git repositories"""
 
+from collections import namedtuple
 import datetime
 import logging
 import os
@@ -8,9 +9,6 @@ import re
 import subprocess
 import tarfile
 import tempfile
-
-from collections import namedtuple
-
 
 GitVersionRef = namedtuple(
     "GitVersionRef",
