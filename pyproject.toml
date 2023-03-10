@@ -123,14 +123,9 @@ namespace_packages = true
 
 [[tool.mypy.overrides]]
 module = [
-    "cirq_iqm",
-    "click",
-    "daemon",
-    "mockito",
-    "psutil"
+    "sphinx_multiversion",
 ]
 ignore_missing_imports = true
-
 
 [tool.pylint.main]
 disable = [
