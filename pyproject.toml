@@ -29,7 +29,7 @@ changelog = "https://github.com/iqm-finland/sphinx-multiversion-contrib/blob/mai
 # Add here additional requirements for extra features, to install with:
 # `pip install iqm-cortex-cli[dev,docs,test]`
 dev = [
-    "tox == 3.25.1"
+    "tox == 4.4.6"
 ]
 test = [
     "black == 22.12.0",
