@@ -98,6 +98,8 @@ mccabe==0.7.0
     # via
     #   -r requirements/constraints.txt
     #   pylint
+mockito==1.2.2
+    # via -r requirements/constraints.txt
 mypy==0.991
     # via -r requirements/constraints.txt
 mypy-extensions==1.0.0
@@ -206,6 +208,12 @@ tomlkit==0.11.6
     # via
     #   -r requirements/constraints.txt
     #   pylint
+types-requests==2.28.9
+    # via -r requirements/constraints.txt
+types-urllib3==1.26.25.8
+    # via
+    #   -r requirements/constraints.txt
+    #   types-requests
 typing-extensions==4.5.0
     # via
     #   -r requirements/constraints.txt

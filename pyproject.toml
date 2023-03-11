@@ -37,7 +37,9 @@ test = [
     "mypy == 0.991",
     "pylint == 2.17.0",
     "pytest == 7.1.2",
-    "pytest-cov == 3.0.0"
+    "pytest-cov == 3.0.0",
+    "mockito == 1.2.2",  # TODO: Chek if this dependency is needed
+    "types-requests == 2.28.9"  # TODO: Chek if this dependency is needed
 ]
 docs = [
     "sphinx-book-theme == 0.3.3"
