@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Helper functions for working with sphinx"""
 
-import collections
+from collections import namedtuple
 import datetime
 import json
 import logging
@@ -21,7 +21,7 @@ DEFAULT_REMOTE_WHITELIST = None
 DEFAULT_RELEASED_PATTERN = r"^tags/.*$"
 DEFAULT_OUTPUTDIR_FORMAT = r"{ref.name}"
 
-Version = collections.namedtuple(
+Version = namedtuple(
     "Version",
     [
         "name",
