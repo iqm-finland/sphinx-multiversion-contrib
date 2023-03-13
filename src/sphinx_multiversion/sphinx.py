@@ -8,7 +8,6 @@ import json
 import logging
 import os
 import posixpath
-
 from typing import Any, Union
 
 from sphinx.addnodes import document as sphinx_doc
@@ -129,7 +128,13 @@ class VersionInfo:
         return posixpath.join(other_outputdir, f"{self.context['pagename']}.html")
 
 
-def html_page_context(app: sphinx_app, pagename: str, templatename: str, context: dict[str, Any], doctree: Union[sphinx_doc, None]) -> None:  # pylint: disable=unused-argument
+def html_page_context(
+    app: sphinx_app,
+    pagename: str,  # pylint: disable=unused-argument
+    templatename: str,  # pylint: disable=unused-argument
+    context: dict[str, Any],
+    doctree: Union[sphinx_doc, None],  # pylint: disable=unused-argument
+) -> None:
     """Set HTML page context"""
     versioninfo = VersionInfo(app, context, app.config.smv_metadata, app.config.smv_current_version)
     context["versions"] = versioninfo
