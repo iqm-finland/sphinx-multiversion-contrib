@@ -38,7 +38,7 @@ def get_toplevel_path(cwd: Union[str, None] = None) -> str:
     return output.rstrip("\n")
 
 
-def get_all_refs(gitroot):
+def get_all_refs(gitroot: str) -> Iterable[GitVersionRef]:
     """Execute Git command to get all references"""
     cmd = (
         "git",
@@ -126,7 +126,7 @@ def get_refs(
         yield ref
 
 
-def file_exists(gitroot, refname, filename):
+def file_exists(gitroot: str, refname: str, filename: str) -> bool:
     """Execute Git command to check if file exists"""
     if os.sep != "/":
         # Git requires / path sep, make sure we use that
@@ -142,7 +142,7 @@ def file_exists(gitroot, refname, filename):
     return proc.returncode == 0
 
 
-def copy_tree(gitroot: str, dst: str, reference: GitVersionRef, sourcepath=".") -> None:
+def copy_tree(gitroot: str, dst: str, reference: GitVersionRef, sourcepath: str = ".") -> None:
     """Execute Git command to copy repository tree"""
     with tempfile.SpooledTemporaryFile() as fp:
         cmd = (
