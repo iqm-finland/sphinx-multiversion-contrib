@@ -2,6 +2,7 @@
 """Command line interface for building multiversion sphinx documentation"""
 
 import argparse
+from collections.abc import Iterator
 import contextlib
 import datetime
 import itertools
@@ -16,15 +17,17 @@ import string
 import subprocess
 import sys
 import tempfile
+from typing import Union
 
 from sphinx import config as sphinx_config
 from sphinx import project as sphinx_project
+from sphinx.errors import ConfigError
 
 from . import git, sphinx
 
 
 @contextlib.contextmanager
-def _set_working_dir(path):
+def _set_working_dir(path: str) -> Iterator[None]:
     """Change current working directory temporary, e.g. within a context manager"""
     prev_cwd = os.getcwd()
     os.chdir(path)
@@ -34,7 +37,12 @@ def _set_working_dir(path):
         os.chdir(prev_cwd)
 
 
-def _create_sphinx_config_worker(q, confpath, confoverrides, add_defaults):
+def _create_sphinx_config_worker(
+    q: multiprocessing.Queue[Union[sphinx_config.Config, Exception]],
+    confpath: str,
+    confoverrides: dict[str, str],
+    add_defaults: bool,
+) -> None:
     """Create a worker to load sphinx configuration"""
     try:
         with _set_working_dir(confpath):
@@ -80,9 +88,11 @@ def _create_sphinx_config_worker(q, confpath, confoverrides, add_defaults):
     q.put(current_config)
 
 
-def _load_sphinx_config(confpath, confoverrides, add_defaults=False):
+def _load_sphinx_config(
+    confpath: str, confoverrides: dict[str, str], add_defaults: bool = False
+) -> sphinx_config.Config:
     """Load sphinx config"""
-    q = multiprocessing.Queue()
+    q: multiprocessing.Queue[Union[sphinx_config.Config, Exception]] = multiprocessing.Queue()
     proc = multiprocessing.Process(
         target=_create_sphinx_config_worker,
         args=(q, confpath, confoverrides, add_defaults),
@@ -95,7 +105,7 @@ def _load_sphinx_config(confpath, confoverrides, add_defaults=False):
     return result
 
 
-def _get_python_flags():  # pylint: disable=too-many-branches
+def _get_python_flags() -> Iterator[str]:  # pylint: disable=too-many-branches
     """Get Python runtime flags that were provided through command line arguments or environment vars"""
     if sys.flags.bytes_warning:
         yield "-b"
@@ -127,7 +137,7 @@ def _get_python_flags():  # pylint: disable=too-many-branches
             yield from ("-X", f"{option}={value}")
 
 
-def _generate_html_redirection_page(path=""):
+def _generate_html_redirection_page(path: str = "") -> str:
     """Generate markup for HTML page which redirects to the latest released docs"""
     return fr'''<!-- This page is created automatically by documentation builder -->
 <!DOCTYPE html>
@@ -141,7 +151,7 @@ def _generate_html_redirection_page(path=""):
 </html>'''
 
 
-def _create_argument_parser():
+def _create_argument_parser() -> argparse.ArgumentParser:
     """Create parser with custom arguments"""
     parser = argparse.ArgumentParser()
     parser.add_argument("sourcedir", help="path to documentation source files")
@@ -197,7 +207,7 @@ def _create_argument_parser():
     return parser
 
 
-def _update_static_path(output_dir):
+def _update_static_path(output_dir: str) -> None:
     """Change (in-place) path of _static folder in all HTML and CSS files of
     older versions of documentation to the _static folder of dev version, then
     remove the local _static folder. This allows to use a single copy of static
@@ -218,7 +228,9 @@ def _update_static_path(output_dir):
     shutil.rmtree(os.path.join(output_dir, "_static"))
 
 
-def main(argv=None):  # pylint: disable=too-many-branches,too-many-locals,too-many-statements
+def main(
+    argv: Union[list[str], None] = None
+) -> int:  # pylint: disable=too-many-branches,too-many-locals,too-many-statements
     """Command line interface for building multiversion sphinx documentation"""
     if not argv:
         argv = sys.argv[1:]
@@ -273,7 +285,7 @@ def main(argv=None):  # pylint: disable=too-many-branches,too-many-locals,too-ma
         gitrefs = sorted(gitrefs, key=lambda x: (x.is_remote, *x))
 
     # git refs by default are just strings, and we need to extract symver to be able to reasonably sort versions
-    gitrefs = sorted(gitrefs, key=lambda x: float(re.match(config.smv_symver_pattern, x.refname).group(1)))
+    gitrefs = sorted(gitrefs, key=lambda x: float(re.match(config.smv_symver_pattern, x.refname).group(1)))  # type: ignore  # TODO: Refactor the line to enable type checking with mypy
 
     logger = logging.getLogger(__name__)
     released_versions = []
@@ -299,7 +311,8 @@ def main(argv=None):  # pylint: disable=too-many-branches,too-many-locals,too-ma
             confpath = os.path.join(repopath, confdir)
             try:
                 current_config = _load_sphinx_config(confpath, confoverrides)
-            except (OSError, sphinx_config.ConfigError):
+            # except (OSError, sphinx_config.ConfigError):
+            except (OSError, ConfigError):
                 logger.error(
                     "Failed load config for %s from %s",
                     gitref.refname,

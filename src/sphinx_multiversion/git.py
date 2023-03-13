@@ -2,6 +2,7 @@
 """Helper functions for working with Git repositories"""
 
 from collections import namedtuple
+from collections.abc import Iterable
 import datetime
 import logging
 import os
@@ -9,6 +10,7 @@ import re
 import subprocess
 import tarfile
 import tempfile
+from typing import Union
 
 GitVersionRef = namedtuple(
     "GitVersionRef",
@@ -25,7 +27,7 @@ GitVersionRef = namedtuple(
 logger = logging.getLogger(__name__)
 
 
-def get_toplevel_path(cwd=None):
+def get_toplevel_path(cwd: Union[str, None] = None) -> str:
     """Execute Git command to get top level path"""
     cmd = (
         "git",
@@ -69,7 +71,9 @@ def get_all_refs(gitroot):
         yield GitVersionRef(name, commit, source, is_remote, refname, creatordate)
 
 
-def get_refs(gitroot, tag_whitelist, branch_whitelist, remote_whitelist, files=()):
+def get_refs(
+    gitroot: str, tag_whitelist: str, branch_whitelist: str, remote_whitelist: str, files: tuple[str, ...] = ()
+) -> Iterable[GitVersionRef]:
     """Filter Git references"""
     for ref in get_all_refs(gitroot):
         if ref.source == "tags":
@@ -139,7 +143,7 @@ def file_exists(gitroot, refname, filename):
 
 
 # def copy_tree(gitroot, src, dst, reference, sourcepath="."):
-def copy_tree(gitroot, dst, reference, sourcepath="."):
+def copy_tree(gitroot: str, dst: str, reference: GitVersionRef, sourcepath=".") -> None:
     """Execute Git command to copy repository tree"""
     with tempfile.SpooledTemporaryFile() as fp:
         cmd = (
