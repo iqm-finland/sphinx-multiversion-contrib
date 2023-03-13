@@ -142,7 +142,6 @@ def file_exists(gitroot, refname, filename):
     return proc.returncode == 0
 
 
-# def copy_tree(gitroot, src, dst, reference, sourcepath="."):
 def copy_tree(gitroot: str, dst: str, reference: GitVersionRef, sourcepath=".") -> None:
     """Execute Git command to copy repository tree"""
     with tempfile.SpooledTemporaryFile() as fp:

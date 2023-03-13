@@ -316,7 +316,6 @@ def main(  # pylint: disable=too-many-branches,too-many-locals,too-many-statemen
             confpath = os.path.join(repopath, confdir)
             try:
                 current_config = _load_sphinx_config(confpath, confoverrides)
-            # except (OSError, sphinx_config.ConfigError):
             except (OSError, ConfigError):
                 logger.error(
                     "Failed load config for %s from %s",
