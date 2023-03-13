@@ -25,7 +25,7 @@ from . import git, sphinx
 
 @contextlib.contextmanager
 def _set_working_dir(path):
-    "Change current working directory temporary, e.g. within a context manager"
+    """Change current working directory temporary, e.g. within a context manager"""
     prev_cwd = os.getcwd()
     os.chdir(path)
     try:
