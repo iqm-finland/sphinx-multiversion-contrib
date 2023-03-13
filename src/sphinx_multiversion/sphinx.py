@@ -2,13 +2,18 @@
 """Helper functions for working with sphinx"""
 
 from collections import namedtuple
+from collections.abc import Iterator
 import datetime
 import json
 import logging
 import os
 import posixpath
 
-from sphinx import config as sphinx_config
+from typing import Any, Union
+
+from sphinx.addnodes import document as sphinx_doc
+from sphinx.application import Sphinx as sphinx_app
+from sphinx.config import Config as sphinx_config
 from sphinx.locale import _
 from sphinx.util import i18n as sphinx_i18n
 
@@ -36,13 +41,13 @@ Version = namedtuple(
 class VersionInfo:
     """Represents information of the available versions of documentation"""
 
-    def __init__(self, app, context, metadata, current_version_name):
+    def __init__(self, app: sphinx_app, context: dict[str, Any], metadata: dict[str, Any], current_version_name: str):
         self.app = app
         self.context = context
         self.metadata = metadata
         self.current_version_name = current_version_name
 
-    def _dict_to_versionobj(self, v):
+    def _dict_to_versionobj(self, v: dict[str, Any]) -> Version:
         return Version(
             name=v["name"],
             url=self.vpathto(v["name"]),
@@ -52,38 +57,38 @@ class VersionInfo:
         )
 
     @property
-    def tags(self):
+    def tags(self) -> list[Version]:
         """Documentation version information by tag"""
         return [self._dict_to_versionobj(v) for v in self.metadata.values() if v["source"] == "tags"]
 
     @property
-    def branches(self):
+    def branches(self) -> list[Version]:
         """Documentation version information by branch"""
         return [self._dict_to_versionobj(v) for v in self.metadata.values() if v["source"] != "tags"]
 
     @property
-    def releases(self):
+    def releases(self) -> list[Version]:
         """Documentation version information of the released versions"""
         return [self._dict_to_versionobj(v) for v in self.metadata.values() if v["is_released"]]
 
     @property
-    def in_development(self):
+    def in_development(self) -> list[Version]:
         """Documentation version information of the versions under development"""
         return [self._dict_to_versionobj(v) for v in self.metadata.values() if not v["is_released"]]
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Version]:
         for item in self.tags:
             yield item
         for item in self.branches:
             yield item
 
-    def __getitem__(self, name):
+    def __getitem__(self, name: str) -> Union[Version, None]:
         v = self.metadata.get(name)
         if v:
             return self._dict_to_versionobj(v)
         return None
 
-    def vhasdoc(self, other_version_name):
+    def vhasdoc(self, other_version_name: str) -> bool:
         """Return True if the current document exists in another version"""
         if self.current_version_name == other_version_name:
             return True
@@ -91,7 +96,7 @@ class VersionInfo:
         other_version = self.metadata[other_version_name]
         return self.context["pagename"] in other_version["docnames"]
 
-    def vpathto(self, other_version_name):
+    def vpathto(self, other_version_name: str) -> str:
         """Get the relative URL to the current page in the other version of
         documentation. If the current page does not exist in that version, the
         relative URL to its root document is returned instead"""
@@ -124,7 +129,7 @@ class VersionInfo:
         return posixpath.join(other_outputdir, f"{self.context['pagename']}.html")
 
 
-def html_page_context(app, pagename, templatename, context, doctree):  # pylint: disable=unused-argument
+def html_page_context(app: sphinx_app, pagename: str, templatename: str, context: dict[str, Any], doctree: Union[sphinx_doc, None]) -> None:  # pylint: disable=unused-argument
     """Set HTML page context"""
     versioninfo = VersionInfo(app, context, app.config.smv_metadata, app.config.smv_current_version)
     context["versions"] = versioninfo
@@ -136,7 +141,7 @@ def html_page_context(app, pagename, templatename, context, doctree):  # pylint:
     context["html_theme"] = app.config.html_theme
 
 
-def config_inited(app, config):
+def config_inited(app: sphinx_app, config: sphinx_config) -> None:
     """Update the Sphinx builder.
     :param sphinx.application.Sphinx app: Sphinx application object.
     """
@@ -148,7 +153,7 @@ def config_inited(app, config):
         with open(config.smv_metadata_path, mode="r", encoding="utf-8") as f:
             metadata = json.load(f)
 
-        config.smv_metadata = metadata
+        config.smv_metadata = metadata  # type: ignore[attr-defined]
 
     if not config.smv_current_version:
         return
@@ -161,22 +166,22 @@ def config_inited(app, config):
     app.connect("html-page-context", html_page_context)
 
     # Restore config values
-    old_config = sphinx_config.Config.read(data["confdir"])
+    old_config = sphinx_config.read(data["confdir"])
     old_config.pre_init_values()
     old_config.init_values()
-    config.version = data["version"]
-    config.release = data["release"]
-    config.rst_prolog = data["rst_prolog"]
-    config.today = old_config.today
+    config.version = data["version"]  # type: ignore[attr-defined]
+    config.release = data["release"]  # type: ignore[attr-defined]
+    config.rst_prolog = data["rst_prolog"]  # type: ignore[attr-defined]
+    config.today = old_config.today  # type: ignore[attr-defined]
     if not config.today:
-        config.today = sphinx_i18n.format_date(
+        config.today = sphinx_i18n.format_date(  # type: ignore[attr-defined]
             format=config.today_fmt or _("%b %d, %Y"),
             date=datetime.datetime.strptime(data["creatordate"], DATE_FMT),
             language=config.language,
         )
 
 
-def setup(app):
+def setup(app: sphinx_app) -> dict[str, Union[str, bool]]:
     """Setup sphinx"""
     app.add_config_value("smv_metadata", {}, "html")
     app.add_config_value("smv_metadata_path", "", "html")
