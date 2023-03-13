@@ -17,7 +17,7 @@ import string
 import subprocess
 import sys
 import tempfile
-from typing import Union
+from typing import Any, Union
 
 from sphinx import config as sphinx_config
 from sphinx import project as sphinx_project
@@ -37,8 +37,10 @@ def _set_working_dir(path: str) -> Iterator[None]:
         os.chdir(prev_cwd)
 
 
+# TODO: Using type annotation "multiprocessing.Queue[Union[sphinx_config.Config, Exception]]"
+#  for q parameter breaks static checks and unit tests, find a way to fix this
 def _create_sphinx_config_worker(
-    q: multiprocessing.Queue[Union[sphinx_config.Config, Exception]],
+    q: Any,
     confpath: str,
     confoverrides: dict[str, str],
     add_defaults: bool,
@@ -92,7 +94,7 @@ def _load_sphinx_config(
     confpath: str, confoverrides: dict[str, str], add_defaults: bool = False
 ) -> sphinx_config.Config:
     """Load sphinx config"""
-    q: multiprocessing.Queue[Union[sphinx_config.Config, Exception]] = multiprocessing.Queue()
+    q: Any = multiprocessing.Queue()
     proc = multiprocessing.Process(
         target=_create_sphinx_config_worker,
         args=(q, confpath, confoverrides, add_defaults),
@@ -228,9 +230,9 @@ def _update_static_path(output_dir: str) -> None:
     shutil.rmtree(os.path.join(output_dir, "_static"))
 
 
-def main(
+def main(  # pylint: disable=too-many-branches,too-many-locals,too-many-statements
     argv: Union[list[str], None] = None
-) -> int:  # pylint: disable=too-many-branches,too-many-locals,too-many-statements
+) -> int:
     """Command line interface for building multiversion sphinx documentation"""
     if not argv:
         argv = sys.argv[1:]
@@ -284,8 +286,11 @@ def main(
     else:
         gitrefs = sorted(gitrefs, key=lambda x: (x.is_remote, *x))
 
+    # TODO: Refactor the line to enable type checking with mypy
     # git refs by default are just strings, and we need to extract symver to be able to reasonably sort versions
-    gitrefs = sorted(gitrefs, key=lambda x: float(re.match(config.smv_symver_pattern, x.refname).group(1)))  # type: ignore  # TODO: Refactor the line to enable type checking with mypy
+    # fmt: off
+    gitrefs = sorted(gitrefs, key=lambda x: float(re.match(config.smv_symver_pattern, x.refname).group(1)))  # type: ignore  # pylint: disable=line-too-long
+    # fmt: on
 
     logger = logging.getLogger(__name__)
     released_versions = []
