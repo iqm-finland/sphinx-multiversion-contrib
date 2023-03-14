@@ -77,7 +77,7 @@ def get_refs(
     """Filter Git references"""
     for ref in get_all_refs(gitroot):
         if ref.source == "tags":
-            if tag_whitelist is None or not re.match(tag_whitelist, ref.name):
+            if not tag_whitelist or not re.match(tag_whitelist, ref.name):
                 logger.debug(
                     "Skipping '%s' because tag '%s' doesn't match the whitelist pattern",
                     ref.refname,
@@ -85,14 +85,14 @@ def get_refs(
                 )
                 continue
         elif ref.source == "heads":
-            if branch_whitelist is None or not re.match(branch_whitelist, ref.name):
+            if not branch_whitelist or not re.match(branch_whitelist, ref.name):
                 logger.debug(
                     "Skipping '%s' because branch '%s' doesn't match the whitelist pattern",
                     ref.refname,
                     ref.name,
                 )
                 continue
-        elif ref.is_remote and remote_whitelist is not None:
+        elif ref.is_remote and remote_whitelist:
             remote_name = ref.source.partition("/")[2]
             if not re.match(remote_whitelist, remote_name):
                 logger.debug(
@@ -101,7 +101,7 @@ def get_refs(
                     remote_name,
                 )
                 continue
-            if branch_whitelist is None or not re.match(branch_whitelist, ref.name):
+            if not branch_whitelist or not re.match(branch_whitelist, ref.name):
                 logger.debug(
                     "Skipping '%s' because branch '%s' doesn't match the whitelist pattern",
                     ref.refname,
