@@ -143,10 +143,8 @@ intersphinx_mapping = {
 }
 
 # -- Options for sphinx_multiversion --------------------------------------------------
-# Only include certain tags (i.e. all tags except for ones listed below)
-# (technically a whitelist, but we treat it as blacklist by using negative lookahead regex `?!`)
-smv_tag_whitelist = r'^(?!(0\.[0-9]*)).*$'  # Excludes the tags that match format "0.X.Y"
-smv_branch_whitelist = 'None'  # Do not include local branches in versions list
-smv_remote_whitelist = 'None'  # Do not include remote branches in versions list
+smv_tag_whitelist = r'^[0-9]*\.[0-9]*$'  # Allow tags that match format "X.Y"
+smv_branch_whitelist = '$-'  # Exclude all local branches in versions list by using unmatchable pattern
+smv_remote_whitelist = '$-'  # Exclude all remote branches in versions list by using unmatchable pattern
 smv_released_pattern = r'^refs/tags/.*$'  # Tags recognized as releases
 smv_outputdir_format = 'versions/{ref.name}'  # Store versioned docs in a subdirectory
