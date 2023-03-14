@@ -143,7 +143,7 @@ intersphinx_mapping = {
 }
 
 # -- Options for sphinx_multiversion --------------------------------------------------
-smv_tag_whitelist = r'^[0-9]*\.[0-9]*$'  # Allow tags that match format "X.Y"
+smv_tag_whitelist = r'^[0-9]+\.[0-9]+$'  # Allow tags that match format "X.Y"
 smv_branch_whitelist = '$-'  # Exclude all local branches in versions list by using unmatchable pattern
 smv_remote_whitelist = '$-'  # Exclude all remote branches in versions list by using unmatchable pattern
 smv_released_pattern = r'^refs/tags/.*$'  # Tags recognized as releases
