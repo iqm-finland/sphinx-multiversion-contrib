@@ -19,9 +19,9 @@ import sys
 import tempfile
 from typing import Any, Union
 
-from sphinx import config as sphinx_config
-from sphinx import project as sphinx_project
-from sphinx.errors import ConfigError
+from sphinx.config import Config as sphinx_config
+from sphinx.errors import ConfigError as sphinx_config_error
+from sphinx.project import Project as sphinx_project
 
 from . import git, sphinx
 
@@ -37,7 +37,7 @@ def _set_working_dir(path: str) -> Iterator[None]:
         os.chdir(prev_cwd)
 
 
-# TODO: Using type annotation "multiprocessing.Queue[Union[sphinx_config.Config, Exception]]"
+# TODO: Using type annotation "multiprocessing.Queue[Union[sphinx_config, Exception]]"
 #  for q parameter breaks static checks and unit tests, find a way to fix this
 def _create_sphinx_config_worker(
     q: Any,
@@ -48,7 +48,7 @@ def _create_sphinx_config_worker(
     """Create a worker to load sphinx configuration"""
     try:
         with _set_working_dir(confpath):
-            current_config = sphinx_config.Config.read(
+            current_config = sphinx_config.read(
                 confpath,
                 confoverrides,
             )
@@ -90,9 +90,7 @@ def _create_sphinx_config_worker(
     q.put(current_config)
 
 
-def _load_sphinx_config(
-    confpath: str, confoverrides: dict[str, str], add_defaults: bool = False
-) -> sphinx_config.Config:
+def _load_sphinx_config(confpath: str, confoverrides: dict[str, str], add_defaults: bool = False) -> sphinx_config:
     """Load sphinx config"""
     q: Any = multiprocessing.Queue()
     proc = multiprocessing.Process(
@@ -316,7 +314,7 @@ def main(  # pylint: disable=too-many-branches,too-many-locals,too-many-statemen
             confpath = os.path.join(repopath, confdir)
             try:
                 current_config = _load_sphinx_config(confpath, confoverrides)
-            except (OSError, ConfigError):
+            except (OSError, sphinx_config_error):
                 logger.error(
                     "Failed load config for %s from %s",
                     gitref.refname,
@@ -344,7 +342,7 @@ def main(  # pylint: disable=too-many-branches,too-many-locals,too-many-statemen
                 source_suffixes = [current_config.source_suffix]
 
             current_sourcedir = os.path.join(repopath, sourcedir)
-            project = sphinx_project.Project(current_sourcedir, source_suffixes)
+            project = sphinx_project(current_sourcedir, source_suffixes)
             metadata[gitref.name] = {
                 "name": gitref.name,
                 "version": current_config.version,
