@@ -362,6 +362,25 @@ def main(  # pylint: disable=too-many-branches,too-many-locals,too-many-statemen
                 released_versions.append(gitref.name)
 
         if args.dev_name:
+            # Find config of development version
+            try:
+                current_config = _load_sphinx_config(confdir_absolute, confoverrides)
+            except (OSError, sphinx_config_error) as e:
+                logger.error(
+                    "Failed load config for %s from %s",
+                    args.dev_name,
+                    confdir_absolute,
+                )
+                raise e
+
+            # Get List of files
+            source_suffixes = current_config.source_suffix
+            if isinstance(source_suffixes, str):
+                source_suffixes = [current_config.source_suffix]
+
+            current_sourcedir = os.path.join(gitroot, sourcedir)
+            project = sphinx_project(current_sourcedir, source_suffixes)
+
             metadata[args.dev_name] = {
                 "name": args.dev_name,
                 "version": args.dev_name,
@@ -370,10 +389,10 @@ def main(  # pylint: disable=too-many-branches,too-many-locals,too-many-statemen
                 "is_released": False,
                 "source": "heads",
                 "creatordate": datetime.datetime.now(datetime.timezone.utc).strftime(sphinx.DATE_FMT),
-                "basedir": repopath,
+                "basedir": gitroot,
                 "sourcedir": confdir_absolute,
                 "outputdir": os.path.join(os.path.abspath(args.outputdir), args.dev_path or ""),
-                "confdir": confpath,
+                "confdir": confdir_absolute,
                 "docnames": list(project.discover()),
             }
 
@@ -388,7 +407,12 @@ def main(  # pylint: disable=too-many-branches,too-many-locals,too-many-statemen
         # Generate HTML page which redirects to latest released docs
         html_file_path = os.path.abspath(os.path.join(sourcedir, "_static/index.html"))
         with open(html_file_path, mode="w", encoding="utf-8") as fp:
-            redirection_path = released_versions[-1] + "/index.html"
+            if len(released_versions) > 0:
+                redirection_path = os.path.join(os.path.pardir, "versions", released_versions[-1], "index.html")
+            else:
+                # Redirect to development version of documentation if no
+                # released versions are available
+                redirection_path = os.path.join(os.path.pardir, "index.html")
             fp.write(_generate_html_redirection_page(redirection_path))
 
         # Write Metadata
@@ -419,7 +443,7 @@ def main(  # pylint: disable=too-many-branches,too-many-locals,too-many-statemen
                 [
                     *defines,
                     "-D",
-                    f"smv_latest_version={released_versions[-1]}",
+                    f"smv_latest_version={released_versions[-1] if len(released_versions) > 0 else args.dev_name}",
                     "-D",
                     f"smv_current_version={version_name}",
                     "-c",
