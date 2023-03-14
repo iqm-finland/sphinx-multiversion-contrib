@@ -255,15 +255,15 @@ def main(  # pylint: disable=too-many-branches,too-many-locals,too-many-statemen
     config = _load_sphinx_config(confdir_absolute, confoverrides, add_defaults=True)
 
     # Get relative paths to root of git repository
-    gitroot = pathlib.Path(git.get_toplevel_path(cwd=sourcedir_absolute)).resolve()
+    gitroot = str(pathlib.Path(git.get_toplevel_path(cwd=sourcedir_absolute)).resolve())
     cwd_absolute = os.path.abspath(".")
-    cwd_relative = os.path.relpath(cwd_absolute, str(gitroot))
+    cwd_relative = os.path.relpath(cwd_absolute, gitroot)
 
-    logger.debug("Git toplevel path: %s", str(gitroot))
-    sourcedir = os.path.relpath(sourcedir_absolute, str(gitroot))
+    logger.debug("Git toplevel path: %s", gitroot)
+    sourcedir = os.path.relpath(sourcedir_absolute, gitroot)
     logger.debug("Source dir (relative to git toplevel path): %s", str(sourcedir))
     if args.confdir:
-        confdir = os.path.relpath(confdir_absolute, str(gitroot))
+        confdir = os.path.relpath(confdir_absolute, gitroot)
     else:
         confdir = sourcedir
     logger.debug("Conf dir (relative to git toplevel path): %s", str(confdir))
@@ -271,7 +271,7 @@ def main(  # pylint: disable=too-many-branches,too-many-locals,too-many-statemen
 
     # Get git references
     gitrefs = git.get_refs(
-        str(gitroot),
+        gitroot,
         config.smv_tag_whitelist,
         config.smv_branch_whitelist,
         config.smv_remote_whitelist,
@@ -301,7 +301,7 @@ def main(  # pylint: disable=too-many-branches,too-many-locals,too-many-statemen
             # Clone Git repo
             repopath = os.path.join(tmp, gitref.commit)
             try:
-                git.copy_tree(str(gitroot), repopath, gitref)
+                git.copy_tree(gitroot, repopath, gitref)
             except (OSError, subprocess.CalledProcessError):
                 logger.error(
                     "Failed to copy git tree for %s to %s",
