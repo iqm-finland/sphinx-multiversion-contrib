@@ -118,6 +118,7 @@ group_by_package = true
 
 [tool.mypy]
 namespace_packages = true
+verbosity = 0
 
 [[tool.mypy.overrides]]
 module = [
