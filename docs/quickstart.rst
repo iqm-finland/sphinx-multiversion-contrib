@@ -4,18 +4,18 @@
 Quickstart
 ==========
 
-After :ref:`installation <install>`, using ``sphinx-multiversion`` should be fairly straightforward.
+After :ref:`installation <install>`, using ``sphinx-multiversion-contrib`` should be fairly straightforward.
 
-To be able to build multiple versions of Sphinx documentation, ``sphinx-multiversion`` acts as wrapper for ``sphinx-build``.
-If you're already using Sphinx documentation for your project, you can now use ``sphinx-multiversion`` to build the HTML documentation.
+To be able to build multiple versions of Sphinx documentation, ``sphinx-multiversion-contrib`` acts as wrapper for ``sphinx-build``.
+If you're already using Sphinx documentation for your project, you can now use ``sphinx-multiversion-contrib`` to build the HTML documentation.
 You can check if it works by running:
 
 .. code-block:: bash
 
-    # Without sphinx-multiversion
+    # Without sphinx-multiversion-contrib
     sphinx-build docs build/html
 
-    # With sphinx-multiversion
+    # With sphinx-multiversion-contrib
     sphinx-multiversion docs build/html
 
 Don't worry - no version picker will show up in the generated HTML yet.

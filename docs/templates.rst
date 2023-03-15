@@ -4,7 +4,7 @@
 Templates
 =========
 
-``sphinx-multiversion`` does not change the look of your HTML output by default.
+``sphinx-multiversion-contrib`` does not change the look of your HTML output by default.
 Instead, you can customize the template to cater to your needs.
 
 

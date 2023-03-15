@@ -17,7 +17,7 @@ Now that the package is installed in editable mode, you can run it:
 
 .. code-block:: bash
 
-   $ sphinx-multiversion-contrib --help
+   $ sphinx-multiversion --help
 
 Build and view the docs:
 

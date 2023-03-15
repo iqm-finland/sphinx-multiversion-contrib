@@ -4,7 +4,7 @@
 Installation
 ============
 
-You can install ``sphinx-multiversion`` via `pip <pip_>`_ or directly from :file:`setup.py`.
+You can install ``sphinx-multiversion-contrib`` via `pip <pip_>`_ or directly from :file:`setup.py`.
 
 Install from PyPi
 ===================
@@ -13,7 +13,7 @@ Using pip you can easily install the latest release version `PyPI <pypi_>`_:
 
 .. code-block:: bash
 
-    pip install sphinx-multiversion
+    pip install sphinx-multiversion-contrib
 
 Install from GitHub
 ===================
@@ -33,7 +33,7 @@ It's also possible to clone the Git repository and install the extension using i
 .. code-block:: bash
 
     git clone https://github.com/iqm-finland/sphinx-multiversion-contrib.git
-    cd sphinx-multiversion
+    cd sphinx-multiversion-contrib
     python setup.py install
 
 
