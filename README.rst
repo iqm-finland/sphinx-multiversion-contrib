@@ -18,5 +18,5 @@ Documentation can be found at: `https://iqm-finland.github.io/sphinx-multiversio
 
 ----
 
-This is a fork of the original ``sphinx-multiversion``. The fork was made at version ``0.2.4``, and all newer versions 
+This is a fork of the original project `sphinx-multiversion <https://github.com/Holzhaus/sphinx-multiversion/>`_. The fork was made at version ``0.2.4``, and all newer versions
 represent new features and bug fixes. See ``CHANGELOG.rst`` for details.
