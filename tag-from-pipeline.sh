@@ -17,7 +17,7 @@ function get_version_in_changelog() {
   done
   if [[ ! $version ]]
   then
-    printf "\033[0;31mChangelog file is incorrect, one of the first seven lines should be of the format 'Version xx.xx.'\033[0m";
+    printf "\033[0;31mChangelog file is incorrect, one of the first seven lines should be of the format 'Version xx.xx.xx (YYYY-MM-DD)'\033[0m";
     return 171
   fi
 }
