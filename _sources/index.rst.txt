@@ -1,28 +1,29 @@
-=============================
-sphinx-multiversion |version|
-=============================
+sphinx-multiversion-contrib
+###########################
 
-A Sphinx extension for building self-hosted versioned documentation.
+:Release: |release|
+:Date: |today|
 
-Project Links
-=============
+Sphinx extension for building self-hosted versioned docs.
 
-* Source code: https://github.com/iqm-finland/sphinx-multiversion-contrib
-
-.. toctree::
-    :maxdepth: 3
-    :caption: General
-
-    install
-    quickstart
-    configuration
-    templates
-    context
+Contents
+--------
 
 .. toctree::
-    :maxdepth: 1
-    :caption: Appendix
+   :maxdepth: 2
 
-    github_pages
-    faq
-    changelog
+   About <about>
+   Install <install>
+   Quickstart <quickstart>
+   Configuration <configuration>
+   Templates <templates>
+   HTML Context <context>
+   FAQ <faq>
+   License <license>
+   Authors <authors>
+   Changelog <changelog>
+
+Indices
+=======
+
+* :ref:`genindex`
