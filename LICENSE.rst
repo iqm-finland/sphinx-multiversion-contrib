@@ -1,5 +1,6 @@
 BSD 2-Clause License
 
+Copyright (c) 2023, IQM Finland Oy <info@meetiqm.com>
 Copyright (c) 2020, Jan Holthuis <jan.holthuis@ruhr-uni-bochum.de>
 All rights reserved.
 

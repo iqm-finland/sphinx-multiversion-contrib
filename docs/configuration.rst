@@ -4,7 +4,7 @@
 Configuration
 =============
 
-``sphinx-multiversion`` reads your Sphinx :file:`conf.py` file for configuration.
+``sphinx-multiversion-contrib`` reads your Sphinx :file:`conf.py` file for configuration.
 As usual, you can also override certain options by using ``-D var=value`` on the command line.
 
 This is what the default configuration looks like:
@@ -33,7 +33,7 @@ You can override all of these values inside your :file:`conf.py`.
 
 .. note::
 
-    You can check which tags/branches are matched by running ``sphinx-multiversion`` with the ``--dump-metadata`` flag. Branches or tags that don't contain both the sphinx source directory and the :file:`conf.py` file will be skipped automatically.
+    You can check which tags/branches are matched by running ``sphinx-multiversion-contrib`` with the ``--dump-metadata`` flag. Branches or tags that don't contain both the sphinx source directory and the :file:`conf.py` file will be skipped automatically.
 
 Tag/Branch/Remote whitelists
 ============================
@@ -57,7 +57,7 @@ Here are some examples:
 
     To list values to match, you can use ``git branch``, ``git tag`` and ``git remote``.
 
-In addition, sphinx-multiversion can build the development version of the docs from the current directory, not from a git reference. To do so, provide the name for a development version using the ``--dev-name`` option. For example, ``--dev-name dev`` will build the development version under name ``dev``. The development version is always marked as not released.
+In addition, ``sphinx-multiversion-contrib`` can build the development version of the docs from the current directory, not from a git reference. To do so, provide the name for a development version using the ``--dev-name`` option. For example, ``--dev-name dev`` will build the development version under name ``dev``. The development version is always marked as not released.
 
 By default, the development version of the docs is stored in the root build directory. You can change this by providing a path relative to the root build directory using the ``--dev-path`` option. For example, ``--dev-path dev/current`` will build the development version in ``dev/current`` subdirectory inside the root build directory.
 
@@ -112,7 +112,7 @@ Here are some examples:
 Skipping Build
 ==============
 
-Building docs for a specific version can be skipped if the target directory already exists and ``--skip-if-outputdir-exists`` flag is passed to `sphinx-multiversion`. It does not check the contents of the directory, only its existence. This can be used to speed up the whole process, so that the docs for older versions are not rebuilt every time.
+Building docs for a specific version can be skipped if the target directory already exists and ``--skip-if-outputdir-exists`` flag is passed to ``sphinx-multiversion-contrib``. It does not check the contents of the directory, only its existence. This can be used to speed up the whole process, so that the docs for older versions are not rebuilt every time.
 
 
 Overriding Configuration Variables
@@ -120,10 +120,10 @@ Overriding Configuration Variables
 
 You can override configuration variables the same way as you're used to with ``sphinx-build``.
 
-Since ``sphinx-multiversion`` copies the branch data into a temporary directory and builds them there while leaving the current working directory unchanged, relative paths in your :file:`conf.py` will refer to the path of the version *you're building from*, not the path of the version you are trying to build documentation for.
+Since ``sphinx-multiversion-contrib`` copies the branch data into a temporary directory and builds them there while leaving the current working directory unchanged, relative paths in your :file:`conf.py` will refer to the path of the version *you're building from*, not the path of the version you are trying to build documentation for.
 
 Sometimes it might be necessary to override the configured path via a command line overide.
-``sphinx-multiversion`` allows you to insert placeholders into your override strings that will automatically be replaced with the correct value for the version you're building the documentation for.
+``sphinx-multiversion-contrib`` allows you to insert placeholders into your override strings that will automatically be replaced with the correct value for the version you're building the documentation for.
 
 Here's an example for the `exhale extension <exhale_>`_:
 
@@ -133,7 +133,7 @@ Here's an example for the `exhale extension <exhale_>`_:
 
 .. note::
 
-    Make sure to enclose the override string in single quotes (``'``) to prevent the shell from treating it as an environment variable and replacing it before it's passed to ``sphinx-multiversion``.
+    Make sure to enclose the override string in single quotes (``'``) to prevent the shell from treating it as an environment variable and replacing it before it's passed to ``sphinx-multiversion-contrib``.
 
 .. note::
 

@@ -1,29 +1,34 @@
 # -*- coding: utf-8 -*-
-import itertools
+"""Command line interface for building multiversion sphinx documentation"""
+
 import argparse
-import multiprocessing
+from collections.abc import Iterator
 import contextlib
+import datetime
+import itertools
 import json
 import logging
+import multiprocessing
 import os
 import pathlib
 import re
+import shutil
 import string
 import subprocess
 import sys
 import tempfile
-import datetime
-import shutil
+from typing import Any, Union
 
-from sphinx import config as sphinx_config
-from sphinx import project as sphinx_project
+from sphinx.config import Config as sphinx_config
+from sphinx.errors import ConfigError as sphinx_config_error
+from sphinx.project import Project as sphinx_project
 
-from . import sphinx
-from . import git
+from . import git, sphinx
 
 
 @contextlib.contextmanager
-def working_dir(path):
+def _set_working_dir(path: str) -> Iterator[None]:
+    """Change current working directory temporary, e.g. within a context manager"""
     prev_cwd = os.getcwd()
     os.chdir(path)
     try:
@@ -32,18 +37,24 @@ def working_dir(path):
         os.chdir(prev_cwd)
 
 
-def load_sphinx_config_worker(q, confpath, confoverrides, add_defaults):
+# TODO: Using type annotation "multiprocessing.Queue[Union[sphinx_config, Exception]]"
+#  for q parameter breaks static checks and unit tests, find a way to fix this
+def _create_sphinx_config_worker(
+    q: Any,
+    confpath: str,
+    confoverrides: dict[str, str],
+    add_defaults: bool,
+) -> None:
+    """Create a worker to load sphinx configuration"""
     try:
-        with working_dir(confpath):
-            current_config = sphinx_config.Config.read(
+        with _set_working_dir(confpath):
+            current_config = sphinx_config.read(
                 confpath,
                 confoverrides,
             )
 
         if add_defaults:
-            current_config.add(
-                "smv_tag_whitelist", sphinx.DEFAULT_TAG_WHITELIST, "html", str
-            )
+            current_config.add("smv_tag_whitelist", sphinx.DEFAULT_TAG_WHITELIST, "html", str)
             current_config.add(
                 "smv_branch_whitelist",
                 sphinx.DEFAULT_TAG_WHITELIST,
@@ -72,17 +83,18 @@ def load_sphinx_config_worker(q, confpath, confoverrides, add_defaults):
             current_config.add("smv_symver_pattern", r"^[^\d]*(\d*\.\d*).*$", "html", str)
         current_config.pre_init_values()
         current_config.init_values()
-    except Exception as err:
-        q.put(err)
+    except Exception as e:  # pylint: disable=broad-except
+        q.put(e)
         return
 
     q.put(current_config)
 
 
-def load_sphinx_config(confpath, confoverrides, add_defaults=False):
-    q = multiprocessing.Queue()
+def _load_sphinx_config(confpath: str, confoverrides: dict[str, str], add_defaults: bool = False) -> sphinx_config:
+    """Load sphinx config"""
+    q: Any = multiprocessing.Queue()
     proc = multiprocessing.Process(
-        target=load_sphinx_config_worker,
+        target=_create_sphinx_config_worker,
         args=(q, confpath, confoverrides, add_defaults),
     )
     proc.start()
@@ -93,7 +105,8 @@ def load_sphinx_config(confpath, confoverrides, add_defaults=False):
     return result
 
 
-def get_python_flags():
+def _get_python_flags() -> Iterator[str]:  # pylint: disable=too-many-branches
+    """Get Python runtime flags that were provided through command line arguments or environment vars"""
     if sys.flags.bytes_warning:
         yield "-b"
     if sys.flags.debug:
@@ -116,14 +129,16 @@ def get_python_flags():
         yield "-q"
     if sys.flags.verbose:
         yield "-v"
+
     for option, value in sys._xoptions.items():
         if value is True:
             yield from ("-X", option)
         else:
-            yield from ("-X", "{}={}".format(option, value))
+            yield from ("-X", f"{option}={value}")
 
 
-def generate_html_redirection_page(path=''):
+def _generate_html_redirection_page(path: str = "") -> str:
+    """Generate markup for HTML page which redirects to the latest released docs"""
     return fr'''<!-- This page is created automatically by documentation builder -->
 <!DOCTYPE html>
 <html>
@@ -136,10 +151,8 @@ def generate_html_redirection_page(path=''):
 </html>'''
 
 
-def main(argv=None):
-    if not argv:
-        argv = sys.argv[1:]
-
+def _create_argument_parser() -> argparse.ArgumentParser:
+    """Create parser with custom arguments"""
     parser = argparse.ArgumentParser()
     parser.add_argument("sourcedir", help="path to documentation source files")
     parser.add_argument("outputdir", help="path to output directory")
@@ -152,10 +165,7 @@ def main(argv=None):
         "-c",
         metavar="PATH",
         dest="confdir",
-        help=(
-            "path where configuration file (conf.py) is located "
-            "(default: same as SOURCEDIR)"
-        ),
+        help=("path where configuration file (conf.py) is located " "(default: same as SOURCEDIR)"),
     )
     parser.add_argument(
         "-C",
@@ -185,19 +195,47 @@ def main(argv=None):
         "--dev-name",
         metavar="DEV_NAME",
         dest="dev_name",
-        help=(
-            "name for the development version of docs to be built"
-        ),
+        help=("name for the development version of docs to be built"),
     )
     parser.add_argument(
         "--dev-path",
         metavar="DEV_PATH",
         dest="dev_path",
-        help=(
-            "path where to store the development version of docs "
-            "(default: root build directory)"
-        ),
+        help=("path where to store the development version of docs " "(default: root build directory)"),
     )
+
+    return parser
+
+
+def _update_static_path(output_dir: str) -> None:
+    """Change (in-place) path of _static folder in all HTML and CSS files of
+    older versions of documentation to the _static folder of dev version, then
+    remove the local _static folder. This allows to use a single copy of static
+    files across all versions of documentation"""
+
+    for root, _, files in os.walk(output_dir):
+        for file in files:
+            if file.endswith(".html") or file.endswith(".css"):
+                file_path = os.path.join(root, file)
+                with open(file_path, mode="r", encoding="utf-8") as f:
+                    filedata = f.read()
+                # Use relative path to the _static folder of dev version
+                filedata = filedata.replace("_static", "../../_static")
+                with open(file_path, mode="w", encoding="utf-8") as f:
+                    f.write(filedata)
+
+    # Remove the _static folder
+    shutil.rmtree(os.path.join(output_dir, "_static"))
+
+
+def main(  # pylint: disable=too-many-branches,too-many-locals,too-many-statements
+    argv: Union[list[str], None] = None
+) -> int:
+    """Command line interface for building multiversion sphinx documentation"""
+    if not argv:
+        argv = sys.argv[1:]
+
+    parser = _create_argument_parser()
     args, argv = parser.parse_known_args(argv)
     if args.noconfig:
         return 1
@@ -205,11 +243,7 @@ def main(argv=None):
     logger = logging.getLogger(__name__)
 
     sourcedir_absolute = os.path.abspath(args.sourcedir)
-    confdir_absolute = (
-        os.path.abspath(args.confdir)
-        if args.confdir is not None
-        else sourcedir_absolute
-    )
+    confdir_absolute = os.path.abspath(args.confdir) if args.confdir is not None else sourcedir_absolute
 
     # Conf-overrides
     confoverrides = {}
@@ -218,24 +252,18 @@ def main(argv=None):
         confoverrides[key] = value
 
     # Parse config
-    config = load_sphinx_config(
-        confdir_absolute, confoverrides, add_defaults=True
-    )
+    config = _load_sphinx_config(confdir_absolute, confoverrides, add_defaults=True)
 
     # Get relative paths to root of git repository
-    gitroot = pathlib.Path(
-        git.get_toplevel_path(cwd=sourcedir_absolute)
-    ).resolve()
+    gitroot = str(pathlib.Path(git.get_toplevel_path(cwd=sourcedir_absolute)).resolve())
     cwd_absolute = os.path.abspath(".")
-    cwd_relative = os.path.relpath(cwd_absolute, str(gitroot))
+    cwd_relative = os.path.relpath(cwd_absolute, gitroot)
 
-    logger.debug("Git toplevel path: %s", str(gitroot))
-    sourcedir = os.path.relpath(sourcedir_absolute, str(gitroot))
-    logger.debug(
-        "Source dir (relative to git toplevel path): %s", str(sourcedir)
-    )
+    logger.debug("Git toplevel path: %s", gitroot)
+    sourcedir = os.path.relpath(sourcedir_absolute, gitroot)
+    logger.debug("Source dir (relative to git toplevel path): %s", str(sourcedir))
     if args.confdir:
-        confdir = os.path.relpath(confdir_absolute, str(gitroot))
+        confdir = os.path.relpath(confdir_absolute, gitroot)
     else:
         confdir = sourcedir
     logger.debug("Conf dir (relative to git toplevel path): %s", str(confdir))
@@ -243,7 +271,7 @@ def main(argv=None):
 
     # Get git references
     gitrefs = git.get_refs(
-        str(gitroot),
+        gitroot,
         config.smv_tag_whitelist,
         config.smv_branch_whitelist,
         config.smv_remote_whitelist,
@@ -256,16 +284,16 @@ def main(argv=None):
     else:
         gitrefs = sorted(gitrefs, key=lambda x: (x.is_remote, *x))
 
+    # TODO: Refactor the line to enable type checking with mypy
     # git refs by default are just strings, and we need to extract symver to be able to reasonably sort versions
-    gitrefs = sorted(gitrefs, key=lambda x: float(re.match(config.smv_symver_pattern, x.refname).group(1)))
+    # fmt: off
+    gitrefs = sorted(gitrefs, key=lambda x: float(re.match(config.smv_symver_pattern, x.refname).group(1)))  # type: ignore  # pylint: disable=line-too-long
+    # fmt: on
 
     logger = logging.getLogger(__name__)
     released_versions = []
 
-    with (
-        tempfile.TemporaryDirectory() as tmp,
-        tempfile.TemporaryDirectory() as doctree_cache
-    ):
+    with (tempfile.TemporaryDirectory() as tmp, tempfile.TemporaryDirectory() as doctree_cache):
         # Generate Metadata
         metadata = {}
         outputdirs = set()
@@ -273,7 +301,7 @@ def main(argv=None):
             # Clone Git repo
             repopath = os.path.join(tmp, gitref.commit)
             try:
-                git.copy_tree(str(gitroot), gitroot.as_uri(), repopath, gitref)
+                git.copy_tree(gitroot, repopath, gitref)
             except (OSError, subprocess.CalledProcessError):
                 logger.error(
                     "Failed to copy git tree for %s to %s",
@@ -285,8 +313,8 @@ def main(argv=None):
             # Find config
             confpath = os.path.join(repopath, confdir)
             try:
-                current_config = load_sphinx_config(confpath, confoverrides)
-            except (OSError, sphinx_config.ConfigError):
+                current_config = _load_sphinx_config(confpath, confoverrides)
+            except (OSError, sphinx_config_error):
                 logger.error(
                     "Failed load config for %s from %s",
                     gitref.refname,
@@ -314,32 +342,45 @@ def main(argv=None):
                 source_suffixes = [current_config.source_suffix]
 
             current_sourcedir = os.path.join(repopath, sourcedir)
-            project = sphinx_project.Project(
-                current_sourcedir, source_suffixes
-            )
+            project = sphinx_project(current_sourcedir, source_suffixes)
             metadata[gitref.name] = {
                 "name": gitref.name,
                 "version": current_config.version,
                 "release": gitref.name,
                 "rst_prolog": current_config.rst_prolog,
-                "is_released": bool(
-                    re.match(config.smv_released_pattern, gitref.refname)
-                ),
+                "is_released": bool(re.match(config.smv_released_pattern, gitref.refname)),
                 "source": gitref.source,
                 "creatordate": gitref.creatordate.strftime(sphinx.DATE_FMT),
                 "basedir": repopath,
                 "sourcedir": current_sourcedir,
-                "outputdir": os.path.join(
-                    os.path.abspath(args.outputdir), outputdir
-                ),
+                "outputdir": os.path.join(os.path.abspath(args.outputdir), outputdir),
                 "confdir": confpath,
                 "docnames": list(project.discover()),
             }
 
-            if metadata[gitref.name]['is_released']:
+            if metadata[gitref.name]["is_released"]:
                 released_versions.append(gitref.name)
-        
+
         if args.dev_name:
+            # Find config of development version
+            try:
+                current_config = _load_sphinx_config(confdir_absolute, confoverrides)
+            except (OSError, sphinx_config_error) as e:
+                logger.error(
+                    "Failed load config for %s from %s",
+                    args.dev_name,
+                    confdir_absolute,
+                )
+                raise e
+
+            # Get List of files
+            source_suffixes = current_config.source_suffix
+            if isinstance(source_suffixes, str):
+                source_suffixes = [current_config.source_suffix]
+
+            current_sourcedir = os.path.join(gitroot, sourcedir)
+            project = sphinx_project(current_sourcedir, source_suffixes)
+
             metadata[args.dev_name] = {
                 "name": args.dev_name,
                 "version": args.dev_name,
@@ -348,12 +389,10 @@ def main(argv=None):
                 "is_released": False,
                 "source": "heads",
                 "creatordate": datetime.datetime.now(datetime.timezone.utc).strftime(sphinx.DATE_FMT),
-                "basedir": repopath,
+                "basedir": gitroot,
                 "sourcedir": confdir_absolute,
-                "outputdir": os.path.join(
-                    os.path.abspath(args.outputdir), args.dev_path or ""
-                ),
-                "confdir": confpath,
+                "outputdir": os.path.join(os.path.abspath(args.outputdir), args.dev_path or ""),
+                "confdir": confdir_absolute,
                 "docnames": list(project.discover()),
             }
 
@@ -367,46 +406,46 @@ def main(argv=None):
 
         # Generate HTML page which redirects to latest released docs
         html_file_path = os.path.abspath(os.path.join(sourcedir, "_static/index.html"))
-        with open(html_file_path, mode="w") as fp:
-            redirection_path = released_versions[-1] + "/index.html"
-            fp.write(generate_html_redirection_page(redirection_path))
+        with open(html_file_path, mode="w", encoding="utf-8") as fp:
+            if len(released_versions) > 0:
+                redirection_path = os.path.join(os.path.pardir, "versions", released_versions[-1], "index.html")
+            else:
+                # Redirect to development version of documentation if no
+                # released versions are available
+                redirection_path = os.path.join(os.path.pardir, "index.html")
+            fp.write(_generate_html_redirection_page(redirection_path))
 
         # Write Metadata
         metadata_path = os.path.abspath(os.path.join(tmp, "versions.json"))
-        with open(metadata_path, mode="w") as fp:
+        with open(metadata_path, mode="w", encoding="utf-8") as fp:
             json.dump(metadata, fp, indent=2)
 
         # Run Sphinx
-        argv.extend(["-D", "smv_metadata_path={}".format(metadata_path)])
+        argv.extend(["-D", f"smv_metadata_path={metadata_path}"])
         for version_name, data in metadata.items():
             # When --skip-if-outputdir-exists flag passed, do not build version if its output
             # directory already exists. This does not check the contents of directory.
             if args.skip_if_outputdir_exists:
-                if os.path.isdir(data['outputdir']) and data['name'] != args.dev_name:
+                if os.path.isdir(data["outputdir"]) and data["name"] != args.dev_name:
                     logger.warning(
                         "Skipping version because outputdir '%s' for %s already exists",
-                        data['outputdir'],
-                        data['name'],
+                        data["outputdir"],
+                        data["name"],
                     )
                     continue
 
             os.makedirs(data["outputdir"], exist_ok=True)
 
-            defines = itertools.chain(
-                *(
-                    ("-D", string.Template(d).safe_substitute(data))
-                    for d in args.define
-                )
-            )
+            defines = itertools.chain(*(("-D", string.Template(d).safe_substitute(data)) for d in args.define))
 
             current_argv = argv.copy()
             current_argv.extend(
                 [
                     *defines,
                     "-D",
-                    "smv_latest_version={}".format(released_versions[-1]),
+                    f"smv_latest_version={released_versions[-1] if len(released_versions) > 0 else args.dev_name}",
                     "-D",
-                    "smv_current_version={}".format(version_name),
+                    f"smv_current_version={version_name}",
                     "-c",
                     confdir_absolute,
                     data["sourcedir"],
@@ -417,7 +456,7 @@ def main(argv=None):
             logger.debug("Running sphinx-build with args: %r", current_argv)
             cmd = (
                 sys.executable,
-                *get_python_flags(),
+                *_get_python_flags(),
                 "-m",
                 "sphinx",
                 "-d",
@@ -438,20 +477,8 @@ def main(argv=None):
             )
             subprocess.check_call(cmd, cwd=current_cwd, env=env)
 
-            # change path for _static folder in all version html and css files to the _static folder of dev version
-            if args.dev_name:
-                if version_name != args.dev_name:
-                    for root, dirs, files in os.walk(data['outputdir']):
-                        for file in files:
-                            if file.endswith('.html') or file.endswith('.css'):
-                                file_path = os.path.join(root, file)
-                                with open(file_path, 'r') as f:
-                                    filedata = f.read()
-                                # use relative path to the dev version _static folder
-                                filedata = filedata.replace("_static", "../../_static")
-                                with open(file_path, 'w') as f:
-                                    f.write(filedata)
-                    # and now remove the _static folder
-                    shutil.rmtree(os.path.join(data['outputdir'], '_static'))
+            # Use "master" copy of static files for all documentation releases
+            if args.dev_name and (version_name != args.dev_name):
+                _update_static_path(data["outputdir"])
 
     return 0
