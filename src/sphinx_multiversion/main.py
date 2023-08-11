@@ -293,7 +293,7 @@ def main(  # pylint: disable=too-many-branches,too-many-locals,too-many-statemen
     logger = logging.getLogger(__name__)
     released_versions = []
 
-    with (tempfile.TemporaryDirectory() as tmp, tempfile.TemporaryDirectory() as doctree_cache):
+    with tempfile.TemporaryDirectory() as tmp, tempfile.TemporaryDirectory() as doctree_cache:
         # Generate Metadata
         metadata = {}
         outputdirs = set()
