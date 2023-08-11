@@ -3,9 +3,9 @@ Changelog
 =========
 
 
-Version 0.3 (2023 03 01)
-------------------------
-* Project layout refactoring started
+Version 0.3.0 (2023-08-11)
+--------------------------
+* Adapt project to IQM code style.
 
 
 Version 0.2.13 (2023-02-21)

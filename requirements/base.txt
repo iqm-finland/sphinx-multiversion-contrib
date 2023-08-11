@@ -8,18 +8,10 @@ alabaster==0.7.13
     # via
     #   -r requirements/constraints.txt
     #   sphinx
-astroid==2.15.0
+astroid==2.15.6
     # via
     #   -r requirements/constraints.txt
     #   pylint
-atomicwrites==1.4.1
-    # via
-    #   -r requirements/constraints.txt
-    #   pytest
-attrs==22.2.0
-    # via
-    #   -r requirements/constraints.txt
-    #   pytest
 babel==2.12.1
     # via
     #   -r requirements/constraints.txt
@@ -28,7 +20,7 @@ beautifulsoup4==4.11.2
     # via
     #   -r requirements/constraints.txt
     #   pydata-sphinx-theme
-black==22.12.0
+black==23.7.0
     # via -r requirements/constraints.txt
 certifi==2022.12.7
     # via
@@ -42,13 +34,6 @@ click==8.1.3
     # via
     #   -r requirements/constraints.txt
     #   black
-colorama==0.4.6
-    # via
-    #   -r requirements/constraints.txt
-    #   click
-    #   pylint
-    #   pytest
-    #   sphinx
 coverage[toml]==7.2.1
     # via
     #   -r requirements/constraints.txt
@@ -62,6 +47,10 @@ docutils==0.17.1
     #   -r requirements/constraints.txt
     #   pydata-sphinx-theme
     #   sphinx
+exceptiongroup==1.1.2
+    # via
+    #   -r requirements/constraints.txt
+    #   pytest
 idna==3.4
     # via
     #   -r requirements/constraints.txt
@@ -70,7 +59,7 @@ imagesize==1.4.1
     # via
     #   -r requirements/constraints.txt
     #   sphinx
-importlib-metadata==6.0.0
+importlib-metadata==6.8.0
     # via
     #   -r requirements/constraints.txt
     #   sphinx
@@ -98,7 +87,7 @@ mccabe==0.7.0
     # via
     #   -r requirements/constraints.txt
     #   pylint
-mypy==0.991
+mypy==1.5.0
     # via -r requirements/constraints.txt
 mypy-extensions==1.0.0
     # via
@@ -108,6 +97,7 @@ mypy-extensions==1.0.0
 packaging==23.0
     # via
     #   -r requirements/constraints.txt
+    #   black
     #   pydata-sphinx-theme
     #   pytest
     #   sphinx
@@ -124,10 +114,6 @@ pluggy==1.0.0
     # via
     #   -r requirements/constraints.txt
     #   pytest
-py==1.11.0
-    # via
-    #   -r requirements/constraints.txt
-    #   pytest
 pydata-sphinx-theme==0.8.1
     # via
     #   -r requirements/constraints.txt
@@ -136,15 +122,15 @@ pygments==2.14.0
     # via
     #   -r requirements/constraints.txt
     #   sphinx
-pylint==2.17.0
+pylint==2.17.5
     # via -r requirements/constraints.txt
-pytest==7.1.2
+pytest==7.4.0
     # via
     #   -r requirements/constraints.txt
     #   pytest-cov
-pytest-cov==3.0.0
+pytest-cov==4.1.0
     # via -r requirements/constraints.txt
-pyyaml==6.0
+pyyaml==6.0.1
     # via
     #   -r requirements/constraints.txt
     #   sphinx-book-theme
@@ -219,7 +205,7 @@ wrapt==1.15.0
     # via
     #   -r requirements/constraints.txt
     #   astroid
-zipp==3.15.0
+zipp==3.16.2
     # via
     #   -r requirements/constraints.txt
     #   importlib-metadata
