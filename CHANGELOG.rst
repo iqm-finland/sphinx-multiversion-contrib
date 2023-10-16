@@ -2,6 +2,11 @@
 Changelog
 =========
 
+Version 0.3.2 (2023-10-16)
+--------------------------
+
+* Fix a bug in documentation version sorting.
+
 Version 0.3.1 (2023-08-11)
 --------------------------
 
