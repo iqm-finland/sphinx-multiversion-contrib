@@ -19,6 +19,7 @@ import sys
 import tempfile
 from typing import Any, Union
 
+from packaging.version import parse
 from sphinx.config import Config as sphinx_config
 from sphinx.errors import ConfigError as sphinx_config_error
 from sphinx.project import Project as sphinx_project
@@ -284,11 +285,9 @@ def main(  # pylint: disable=too-many-branches,too-many-locals,too-many-statemen
     else:
         gitrefs = sorted(gitrefs, key=lambda x: (x.is_remote, *x))
 
-    # TODO: Refactor the line to enable type checking with mypy
-    # git refs by default are just strings, and we need to extract symver to be able to reasonably sort versions
-    # fmt: off
-    gitrefs = sorted(gitrefs, key=lambda x: float(re.match(config.smv_symver_pattern, x.refname).group(1)))  # type: ignore  # pylint: disable=line-too-long
-    # fmt: on
+    # git refs by default are just strings (e.g. "refs/tags/10.11"), and we need
+    # to extract semver to be able to sort versions
+    gitrefs.sort(key=lambda gitref: parse(gitref.refname.split("/")[-1]))
 
     logger = logging.getLogger(__name__)
     released_versions = []
