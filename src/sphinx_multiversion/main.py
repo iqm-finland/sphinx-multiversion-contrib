@@ -149,6 +149,9 @@ def _generate_html_redirection_page(path: str = "") -> str:
     <meta http-equiv="refresh" content="0; url=./{path}">
     <link rel="canonical" href="./{path}">
   </head>
+    <body>
+        <p>Redirecting you to <a href="./{path}">{path}</a></p>
+    </body>
 </html>'''
 
 
@@ -403,17 +406,6 @@ def main(  # pylint: disable=too-many-branches,too-many-locals,too-many-statemen
             logger.error("No matching refs found!")
             return 2
 
-        # Generate HTML page which redirects to latest released docs
-        html_file_path = os.path.abspath(os.path.join(sourcedir, "_static/index.html"))
-        with open(html_file_path, mode="w", encoding="utf-8") as fp:
-            if len(released_versions) > 0:
-                redirection_path = os.path.join(os.path.pardir, "versions", released_versions[-1], "index.html")
-            else:
-                # Redirect to development version of documentation if no
-                # released versions are available
-                redirection_path = os.path.join(os.path.pardir, "index.html")
-            fp.write(_generate_html_redirection_page(redirection_path))
-
         # Write Metadata
         metadata_path = os.path.abspath(os.path.join(tmp, "versions.json"))
         with open(metadata_path, mode="w", encoding="utf-8") as fp:
@@ -479,5 +471,13 @@ def main(  # pylint: disable=too-many-branches,too-many-locals,too-many-statemen
             # Use "master" copy of static files for all documentation releases
             if args.dev_name and (version_name != args.dev_name):
                 _update_static_path(data["outputdir"])
+
+    # Generate HTML page which redirects to latest released docs
+    html_file_path = os.path.join(os.path.abspath(args.outputdir), "index.html")
+    with open(html_file_path, mode="w", encoding="utf-8") as fp:
+        fake_ref = git.GitVersionRef(released_versions[-1], "", "", "", "", "")
+        outputdir_formatted = config.smv_outputdir_format.format(ref=fake_ref, config=current_config)
+        redirection_path = os.path.join(outputdir_formatted, "index.html")
+        fp.write(_generate_html_redirection_page(redirection_path))
 
     return 0
